@@ -1,4 +1,4 @@
-package com.sunnyWalkmanServer.utilities.results;
+package com.RoboRallyServer.utilities.results;
 
 public class SuccessDataResult<T> extends DataResult<T>{
     public SuccessDataResult(T data, String message) {

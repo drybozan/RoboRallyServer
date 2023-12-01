@@ -1,4 +1,4 @@
-package com.sunnyWalkmanServer.utilities.results;
+package com.RoboRallyServer.utilities.results;
 
 public class DataResult<T> extends  Result //<T> dondurulecek veri tipi
     {
