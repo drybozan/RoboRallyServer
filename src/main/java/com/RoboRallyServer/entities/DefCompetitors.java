@@ -24,12 +24,16 @@ public class DefCompetitors {
     private int id;
 
     @NotNull
+    @Column(name = "sCity")
+    private String city;
+
+    @NotNull
     @Column(name = "sName")
     private String name;
 
 
-    @Column(name = "u64Duration")
-    private Float duration;
+    @Column(name = "sDuration")
+    private String duration;
 
     @Column(name = "bStart")
     private Boolean start;
