@@ -35,4 +35,16 @@ public class DefCompetitorsController {
 
         return this.defCompetitorsService.delete(id);
     }
+
+    @PostMapping(value = "/update")
+    public Result update(@RequestBody DefCompetitors competitors) {
+
+        return this.defCompetitorsService.update(competitors);
+    }
+
+    @GetMapping(value = "/getById")
+    public DataResult<DefCompetitors> getById( @RequestParam int id ) {
+
+        return this.defCompetitorsService.getById(id);
+    }
 }

@@ -13,4 +13,7 @@ public interface DefCompetitorsService {
     DataResult<List<DefCompetitors>> getAllCompetitorsByDuration();
 
     Result delete(int id);
+    Result update(DefCompetitors competitors);
+
+    DataResult<DefCompetitors> getById(int id);
 }

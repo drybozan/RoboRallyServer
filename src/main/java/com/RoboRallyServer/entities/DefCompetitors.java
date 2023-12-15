@@ -38,5 +38,8 @@ public class DefCompetitors {
     @Column(name = "bStart")
     private Boolean start;
 
+    @Column(name = "bEliminated")
+    private Boolean eliminated;
+
 
 }

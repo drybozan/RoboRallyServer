@@ -52,4 +52,35 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         }
 
     }
+
+    @Override
+    public Result update(DefCompetitors newCompetitor) {
+
+        // bu id ye ait kayıt var mı
+        if (this.defCompetitorsDao.existsById(newCompetitor.getId())) {
+            DefCompetitors oldCompetitor =  this.defCompetitorsDao.findById(newCompetitor.getId());
+            oldCompetitor.setCity(newCompetitor.getCity());
+            oldCompetitor.setName(newCompetitor.getName());
+            oldCompetitor.setEliminated(newCompetitor.getEliminated());
+
+            this.defCompetitorsDao.save(oldCompetitor);
+
+            return new SuccessResult("Yarışmacı başarıyla güncellendi.");
+        } else {
+            return new ErrorResult("Yarışmacı bilgisi bulunamadı.");
+        }
+
+    }
+
+    @Override
+    public DataResult<DefCompetitors> getById(int id) {
+        // bu id ye ait kayıt var mı
+        if (this.defCompetitorsDao.existsById(id)) {
+            DefCompetitors competitor =  this.defCompetitorsDao.findById(id);
+
+            return new SuccessDataResult<DefCompetitors>(competitor,"Id bilgisine göre data listelendi.");
+        } else {
+            return new ErrorDataResult<DefCompetitors>("Id bilgisine göre yarışmacı bulunamadı.");
+        }
+    }
 }

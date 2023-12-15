@@ -14,6 +14,7 @@ public interface DefCompetitorsDao extends JpaRepository<DefCompetitors, Integer
     @Query(value = "SELECT * FROM RoboRallyDB.DefCompetitors ORDER BY LENGTH(sDuration), sDuration ASC;", nativeQuery = true)
     List<DefCompetitors> getAllCompetitorsByDuration();
 
+    DefCompetitors findById(int id);
 
 
 }
