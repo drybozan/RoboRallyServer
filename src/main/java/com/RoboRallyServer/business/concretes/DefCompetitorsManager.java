@@ -39,4 +39,17 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         }
 
     }
+
+    @Override
+    public Result delete(int id) {
+
+        // bu id ye ait kayıt var mı
+        if (this.defCompetitorsDao.existsById(id)) {
+            this.defCompetitorsDao.deleteById(id);
+            return new SuccessResult("Yarışmacı başarıyla silindi.");
+        } else {
+            return new ErrorResult("Yarışmacı bilgisi bulunamadı.");
+        }
+
+    }
 }

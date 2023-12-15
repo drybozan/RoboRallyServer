@@ -13,4 +13,7 @@ public interface DefCompetitorsDao extends JpaRepository<DefCompetitors, Integer
     //önce string uzunluğuna göre sıralama yapar, ardından aynı uzunluğa sahip olanları süre değerine göre sıralar.
     @Query(value = "SELECT * FROM RoboRallyDB.DefCompetitors ORDER BY LENGTH(sDuration), sDuration ASC;", nativeQuery = true)
     List<DefCompetitors> getAllCompetitorsByDuration();
+
+
+
 }

@@ -29,4 +29,10 @@ public class DefCompetitorsController {
 
         return this.defCompetitorsService.getAllCompetitorsByDuration();
     }
+
+    @DeleteMapping(value = "/deleteById")
+    public Result deleteById( @RequestParam int id ) {
+
+        return this.defCompetitorsService.delete(id);
+    }
 }
