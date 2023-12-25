@@ -58,7 +58,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
         // bu id ye ait kayıt var mı
         if (this.defCompetitorsDao.existsById(newCompetitor.getId())) {
-            DefCompetitors oldCompetitor =  this.defCompetitorsDao.findById(newCompetitor.getId());
+            DefCompetitors oldCompetitor = this.defCompetitorsDao.findById(newCompetitor.getId());
             oldCompetitor.setCity(newCompetitor.getCity());
             oldCompetitor.setName(newCompetitor.getName());
             oldCompetitor.setEliminated(newCompetitor.getEliminated());
@@ -76,11 +76,42 @@ public class DefCompetitorsManager implements DefCompetitorsService {
     public DataResult<DefCompetitors> getById(int id) {
         // bu id ye ait kayıt var mı
         if (this.defCompetitorsDao.existsById(id)) {
-            DefCompetitors competitor =  this.defCompetitorsDao.findById(id);
+            DefCompetitors competitor = this.defCompetitorsDao.findById(id);
 
-            return new SuccessDataResult<DefCompetitors>(competitor,"Id bilgisine göre data listelendi.");
+            return new SuccessDataResult<DefCompetitors>(competitor, "Id bilgisine göre data listelendi.");
         } else {
             return new ErrorDataResult<DefCompetitors>("Id bilgisine göre yarışmacı bulunamadı.");
         }
     }
+
+    @Override
+    public Result updateDurationById(int id, String duration) {
+        // bu id ye ait kayıt var mı
+        if (this.defCompetitorsDao.existsById(id)) {
+            DefCompetitors competitor = this.defCompetitorsDao.findById(id);
+            if (duration.equals("05.00:00")) {
+                competitor.setEliminated(true); // eger süre 5dk ya esitse yarismaciyi ele
+            }
+            competitor.setDuration(duration);
+            this.defCompetitorsDao.save(competitor);
+            return new SuccessResult("Id bilgisine göre duration güncellendi..");
+        } else {
+            return new ErrorResult("Id bilgisine göre yarışmacı bulunamadı.");
+        }
+    }
+
+    @Override
+    public Result updateStartById(int id, Boolean start) {
+        // bu id ye ait kayıt var mı
+        if (this.defCompetitorsDao.existsById(id)) {
+            DefCompetitors competitor = this.defCompetitorsDao.findById(id);
+            competitor.setStart(start);
+            this.defCompetitorsDao.save(competitor);
+            return new SuccessResult("Id bilgisine göre start güncellendi..");
+        } else {
+            return new ErrorResult("Id bilgisine göre yarışmacı bulunamadı.");
+        }
+    }
+
+
 }

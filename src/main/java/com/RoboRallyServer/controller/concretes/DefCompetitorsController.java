@@ -47,4 +47,18 @@ public class DefCompetitorsController {
 
         return this.defCompetitorsService.getById(id);
     }
+
+    @PostMapping(value = "/updateDurationById")
+    public Result updateDurationById( @RequestParam  int id, @RequestParam  String duration) {
+
+        return this.defCompetitorsService.updateDurationById(id,duration);
+    }
+
+    @PostMapping(value = "/updateStartById")
+    public Result updateStartById(@RequestParam int id, @RequestParam Boolean start) {
+
+        return this.defCompetitorsService.updateStartById(id,start);
+    }
+
+
 }

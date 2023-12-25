@@ -11,7 +11,13 @@ import java.util.List;
 public interface DefCompetitorsDao extends JpaRepository<DefCompetitors, Integer> {
 
     //önce string uzunluğuna göre sıralama yapar, ardından aynı uzunluğa sahip olanları süre değerine göre sıralar.
-    @Query(value = "SELECT * FROM RoboRallyDB.DefCompetitors ORDER BY LENGTH(sDuration), sDuration ASC;", nativeQuery = true)
+   // @Query(value = "SELECT * FROM RoboRallyDB.DefCompetitors ORDER BY LENGTH(sDuration), sDuration ASC;", nativeQuery = true)
+    /*
+    * bu sorgu önce elimine edilmemiş kayıtları (bEliminated = false)
+    * süre uzunluğuna göre küçükten büyüğe sıralar, ardından elimine edilmiş kayıtları (bEliminated = true) en altta tutar.
+    */
+
+    @Query(value = "SELECT * FROM RoboRallyDB.DefCompetitors ORDER BY  CASE  WHEN bEliminated = false  THEN 0  ELSE 1    END,  LENGTH(sDuration),   sDuration ASC;", nativeQuery = true)
     List<DefCompetitors> getAllCompetitorsByDuration();
 
     DefCompetitors findById(int id);

@@ -16,4 +16,7 @@ public interface DefCompetitorsService {
     Result update(DefCompetitors competitors);
 
     DataResult<DefCompetitors> getById(int id);
+    Result updateDurationById(int id,String duration);
+    Result updateStartById(int id,Boolean start);
+
 }
