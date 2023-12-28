@@ -10,13 +10,13 @@ public interface DefCompetitorsService {
 
     Result add(DefCompetitors competitors);
 
-    DataResult<List<DefCompetitors>> getAllCompetitorsByDuration();
+    DataResult<List<DefCompetitors>> getAllCompetitors();
 
     Result delete(int id);
     Result update(DefCompetitors competitors);
 
     DataResult<DefCompetitors> getById(int id);
-    Result updateDurationById(int id,String duration);
-    Result updateStartById(int id,Boolean start);
+    Result updateStartTimeById(int id,String startTime);
+    Result updateStopTimeById(int id,String stopTime);
 
 }

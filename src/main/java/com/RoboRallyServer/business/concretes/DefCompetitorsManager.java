@@ -26,11 +26,11 @@ public class DefCompetitorsManager implements DefCompetitorsService {
     }
 
     @Override
-    public DataResult<List<DefCompetitors>> getAllCompetitorsByDuration() {
+    public DataResult<List<DefCompetitors>> getAllCompetitors() {
 
         try {
 
-            List<DefCompetitors> competitors = this.defCompetitorsDao.getAllCompetitorsByDuration();
+            List<DefCompetitors> competitors = this.defCompetitorsDao.findAll();
 
             return new SuccessDataResult<>(competitors, "Yarışmacılar listelendi.");
 
@@ -85,31 +85,28 @@ public class DefCompetitorsManager implements DefCompetitorsService {
     }
 
     @Override
-    public Result updateDurationById(int id, String duration) {
+    public Result updateStartTimeById(int id, String starTime) {
         // bu id ye ait kayıt var mı
         if (this.defCompetitorsDao.existsById(id)) {
             DefCompetitors competitor = this.defCompetitorsDao.findById(id);
-            if (duration.equals("05.00:00")) {
-                competitor.setEliminated(true); // eger süre 5dk ya esitse yarismaciyi ele
-            }
-            competitor.setDuration(duration);
+            competitor.setStartTime(starTime);
             this.defCompetitorsDao.save(competitor);
-            return new SuccessResult("Id bilgisine göre duration güncellendi..");
+            return new SuccessResult("Id bilgisine göre starTime güncellendi..");
         } else {
             return new ErrorResult("Id bilgisine göre yarışmacı bulunamadı.");
         }
     }
 
     @Override
-    public Result updateStartById(int id, Boolean start) {
+    public Result updateStopTimeById(int id, String stopTime) {
         // bu id ye ait kayıt var mı
         if (this.defCompetitorsDao.existsById(id)) {
             DefCompetitors competitor = this.defCompetitorsDao.findById(id);
-            competitor.setStart(start);
+            competitor.setStopTime(stopTime);
             this.defCompetitorsDao.save(competitor);
-            return new SuccessResult("Id bilgisine göre start güncellendi..");
+            return new SuccessResult("Id bilgisine göre stopTime güncellendi..");
         } else {
-            return new ErrorResult("Id bilgisine göre yarışmacı bulunamadı.");
+            return new ErrorResult("Id bilgisine göre stopTime bulunamadı.");
         }
     }
 

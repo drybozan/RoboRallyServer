@@ -32,11 +32,11 @@ public class DefCompetitors {
     private String name;
 
 
-    @Column(name = "sDuration")
-    private String duration;
+    @Column(name = "sStartTime")
+    private String startTime;
 
-    @Column(name = "bStart")
-    private Boolean start;
+    @Column(name = "bStopTime")
+    private String stopTime;
 
     @Column(name = "bEliminated")
     private Boolean eliminated;

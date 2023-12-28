@@ -6,7 +6,6 @@ import com.RoboRallyServer.utilities.results.DataResult;
 import com.RoboRallyServer.utilities.results.Result;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -24,10 +23,9 @@ public class DefCompetitorsController {
         return this.defCompetitorsService.add(competitors);
     }
 
-    @GetMapping(value = "/getAllByDuration")
+    @GetMapping(value = "/getAllCompetitors")
     public DataResult<List<DefCompetitors>> getAllCompetitorsByDuration( ) {
-
-        return this.defCompetitorsService.getAllCompetitorsByDuration();
+        return this.defCompetitorsService.getAllCompetitors();
     }
 
     @DeleteMapping(value = "/deleteById")
@@ -48,16 +46,16 @@ public class DefCompetitorsController {
         return this.defCompetitorsService.getById(id);
     }
 
-    @PostMapping(value = "/updateDurationById")
-    public Result updateDurationById( @RequestParam  int id, @RequestParam  String duration) {
+    @PostMapping(value = "/updateStartTimeById")
+    public Result updateStartTimeById( @RequestParam  int id, @RequestParam  String startTime) {
 
-        return this.defCompetitorsService.updateDurationById(id,duration);
+        return this.defCompetitorsService.updateStartTimeById(id,startTime);
     }
 
-    @PostMapping(value = "/updateStartById")
-    public Result updateStartById(@RequestParam int id, @RequestParam Boolean start) {
+    @PostMapping(value = "/updateStopTimeById")
+    public Result updateStopTimeById(@RequestParam int id, @RequestParam String stopTime) {
 
-        return this.defCompetitorsService.updateStartById(id,start);
+        return this.defCompetitorsService.updateStopTimeById(id,stopTime);
     }
 
 
