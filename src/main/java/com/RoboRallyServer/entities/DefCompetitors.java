@@ -38,6 +38,9 @@ public class DefCompetitors {
     @Column(name = "bStopTime")
     private String stopTime;
 
+    @Column(name = "sDuration")
+    private String duration;
+
     @Column(name = "bEliminated")
     private Boolean eliminated;
 

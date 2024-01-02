@@ -24,8 +24,13 @@ public class DefCompetitorsController {
     }
 
     @GetMapping(value = "/getAllCompetitors")
-    public DataResult<List<DefCompetitors>> getAllCompetitorsByDuration( ) {
+    public DataResult<List<DefCompetitors>> getAllCompetitors( ) {
         return this.defCompetitorsService.getAllCompetitors();
+    }
+
+    @GetMapping(value = "/getAllCompetitorsByDuration")
+    public DataResult<List<DefCompetitors>> getAllCompetitorsByDuration( ) {
+        return this.defCompetitorsService.getAllCompetitorsByDuration();
     }
 
     @DeleteMapping(value = "/deleteById")
@@ -57,6 +62,14 @@ public class DefCompetitorsController {
 
         return this.defCompetitorsService.updateStopTimeById(id,stopTime);
     }
+
+
+    @PostMapping(value = "/updateDurationById")
+    public Result updateDurationById( @RequestParam  int id, @RequestParam  String duration) {
+
+        return this.defCompetitorsService.updateDurationById(id,duration);
+    }
+
 
 
 }

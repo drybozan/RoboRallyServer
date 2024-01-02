@@ -41,6 +41,19 @@ public class DefCompetitorsManager implements DefCompetitorsService {
     }
 
     @Override
+    public DataResult<List<DefCompetitors>> getAllCompetitorsByDuration() {
+        try {
+
+            List<DefCompetitors> competitors = this.defCompetitorsDao.getAllCompetitorsByDuration();
+
+            return new SuccessDataResult<>(competitors, "Yarışmacılar duration bilgisine göre listelendi.");
+
+        } catch (Exception e) {
+            return new ErrorDataResult<>("Yarışmacılar listelenirken bir hata oluştu.");
+        }
+    }
+
+    @Override
     public Result delete(int id) {
 
         // bu id ye ait kayıt var mı
@@ -109,6 +122,23 @@ public class DefCompetitorsManager implements DefCompetitorsService {
             return new ErrorResult("Id bilgisine göre stopTime bulunamadı.");
         }
     }
+
+    @Override
+    public Result updateDurationById(int id, String duration) {
+        // bu id ye ait kayıt var mı
+        if (this.defCompetitorsDao.existsById(id)) {
+            DefCompetitors competitor = this.defCompetitorsDao.findById(id);
+            if (duration.equals("05.00:00")) {
+                competitor.setEliminated(true); // eger süre 5dk ya esitse yarismaciyi ele
+            }
+            competitor.setDuration(duration);
+            this.defCompetitorsDao.save(competitor);
+            return new SuccessResult("Id bilgisine göre duration güncellendi..");
+        } else {
+            return new ErrorResult("Id bilgisine göre yarışmacı bulunamadı.");
+        }
+    }
+
 
 
 }

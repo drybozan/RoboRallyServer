@@ -11,6 +11,7 @@ public interface DefCompetitorsService {
     Result add(DefCompetitors competitors);
 
     DataResult<List<DefCompetitors>> getAllCompetitors();
+    DataResult<List<DefCompetitors>> getAllCompetitorsByDuration();
 
     Result delete(int id);
     Result update(DefCompetitors competitors);
@@ -18,5 +19,7 @@ public interface DefCompetitorsService {
     DataResult<DefCompetitors> getById(int id);
     Result updateStartTimeById(int id,String startTime);
     Result updateStopTimeById(int id,String stopTime);
+
+    Result updateDurationById(int id, String duration);
 
 }
