@@ -1,6 +1,7 @@
 package com.RoboRallyServer.dataAccess.abstracts;
 
 import com.RoboRallyServer.entities.DefCompetitors;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -22,6 +23,9 @@ public interface DefCompetitorsDao extends JpaRepository<DefCompetitors, Integer
 
     @Query(value = "SELECT * FROM RoboRallyDB.DefCompetitors ;", nativeQuery = true)
     List<DefCompetitors> findAll();
+
+
+    @Transactional
     DefCompetitors findById(int id);
 
 

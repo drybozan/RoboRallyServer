@@ -4,6 +4,8 @@ import com.RoboRallyServer.business.abstracts.DefCompetitorsService;
 import com.RoboRallyServer.dataAccess.abstracts.DefCompetitorsDao;
 import com.RoboRallyServer.entities.DefCompetitors;
 import com.RoboRallyServer.utilities.results.*;
+import com.RoboRallyServer.utilities.timer.CompetitorTimer;
+import com.RoboRallyServer.utilities.timer.CompetitorTimerManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +16,7 @@ import java.util.List;
 public class DefCompetitorsManager implements DefCompetitorsService {
 
     private final DefCompetitorsDao defCompetitorsDao;
-
+    private final CompetitorTimerManager timerManager;
     @Override
     public Result add(DefCompetitors competitors) {
 
@@ -104,6 +106,9 @@ public class DefCompetitorsManager implements DefCompetitorsService {
             DefCompetitors competitor = this.defCompetitorsDao.findById(id);
             competitor.setStartTime(starTime);
             this.defCompetitorsDao.save(competitor);
+
+            // Yarışmacı  için timer'ı başlat
+            timerManager.startTimer(id);
             return new SuccessResult("Id bilgisine göre starTime güncellendi..");
         } else {
             return new ErrorResult("Id bilgisine göre yarışmacı bulunamadı.");
@@ -117,6 +122,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
             DefCompetitors competitor = this.defCompetitorsDao.findById(id);
             competitor.setStopTime(stopTime);
             this.defCompetitorsDao.save(competitor);
+            timerManager.stopTimer(id);
             return new SuccessResult("Id bilgisine göre stopTime güncellendi..");
         } else {
             return new ErrorResult("Id bilgisine göre stopTime bulunamadı.");
@@ -133,6 +139,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
             }
             competitor.setDuration(duration);
             this.defCompetitorsDao.save(competitor);
+
             return new SuccessResult("Id bilgisine göre duration güncellendi..");
         } else {
             return new ErrorResult("Id bilgisine göre yarışmacı bulunamadı.");
