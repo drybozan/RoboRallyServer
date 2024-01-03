@@ -4,35 +4,6 @@ import java.time.Duration;
 import java.time.Instant;
 
 public class CompetitorTimer {
-   /* private Instant startTime;
-    private Instant stopTime;
-
-    public void startTimer() {
-        this.startTime = Instant.now();
-    }
-
-    public void stopTimer() {
-        this.stopTime = Instant.now();
-    }
-
-    public Duration getElapsedTime() {
-        if (startTime != null && stopTime != null) {
-            return Duration.between(startTime, stopTime);
-        } else {
-            // Başlatılmış ve durdurulmuş bir süre yoksa veya sadece başlatılmışsa sıfır süre döndür.
-            return Duration.ZERO;
-        }
-    }
-
-    public String getFormattedElapsedTime() {
-        Duration elapsedTime = getElapsedTime();
-
-        long minutes = elapsedTime.toMinutes();
-        long seconds = elapsedTime.minusMinutes(minutes).getSeconds();
-        long millis = elapsedTime.minusMinutes(minutes).minusSeconds(seconds).toMillis();
-
-        return String.format("%d:%02d:%03d", minutes, seconds, millis);
-    }*/
 
     private Instant startTime;
     private volatile boolean isRunning;
@@ -45,11 +16,11 @@ public class CompetitorTimer {
         Thread timerThread = new Thread(() -> {
             while (isRunning) {
                 printElapsedTime();
-                try {
+           /*     try {
                     Thread.sleep(1000); // Her saniye
                 } catch (InterruptedException e) {
                     e.printStackTrace();
-                }
+                }*/
             }
         });
 
@@ -79,18 +50,13 @@ public class CompetitorTimer {
         return getFormattedElapsedTime(elapsedTime);
     }
 
-    private void printElapsedTime(Duration elapsedTime) {
-        System.out.println("formattedElapsedTime: " + getFormattedElapsedTime(elapsedTime));
-    }
-
-
 
     private String getFormattedElapsedTime(Duration elapsedTime) {
         long minutes = elapsedTime.toMinutes();
         long seconds = elapsedTime.minusMinutes(minutes).getSeconds();
         long millis = elapsedTime.minusMinutes(minutes).minusSeconds(seconds).toMillis();
 
-        return String.format("%d:%02d:%03d", minutes, seconds, millis);
+        return String.format("%02d:%02d:%03d", minutes, seconds, millis);
     }
 
 }

@@ -80,6 +80,11 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
             this.defCompetitorsDao.save(oldCompetitor);
 
+            //eger kullancı elendiyse manuel olarak timer ı varsa sonlandır.
+            if(newCompetitor.getEliminated()){
+                timerManager.stopTimer(newCompetitor.getId());
+            }
+
             return new SuccessResult("Yarışmacı başarıyla güncellendi.");
         } else {
             return new ErrorResult("Yarışmacı bilgisi bulunamadı.");

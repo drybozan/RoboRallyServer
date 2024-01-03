@@ -23,33 +23,46 @@ public class CompetitorTimerManager {
     private TimerTask timerTask; // TimerTask'i bir kere oluştur
 
 
-
     @Autowired
     public CompetitorTimerManager(DefCompetitorsDao defCompetitorsDao) {
         this.defCompetitorsDao = defCompetitorsDao;
     }
+
+    /*
+  kullanıcıların ve zamanlayıcının aynı veri üzerinde işlem yapmasını engellemek için bir kopya almak olabilir.
+  CompetitorTimerManager sınıfında, competitorTimers üzerinde işlem yapmak istediğinizde, o anki durumu bir kopyasını alabilir ve bu kopya üzerinde
+  işlemleri gerçekleştirebilirsiniz. Bu şekilde, orijinal veri üzerinde değişiklik yapmazsınız ve ConcurrentModificationException hatası almazsınız.
+
+
+    */
+
     public void startTimer(int competitorId) {
         CompetitorTimer competitorTimer = new CompetitorTimer();
         competitorTimer.startTimer();
-        competitorTimers.put(competitorId, competitorTimer);
-        // TimerTask'i sadece bir kere oluştur
-        if (timerTask == null) {
-            timerTask = new TimerTask() {
-                @Override
-                public void run() {
-                    competitorTimers.forEach((id, timer) -> {
+
+        synchronized (competitorTimers) {
+            Map<Integer, CompetitorTimer> competitorTimersCopy = new HashMap<>(competitorTimers);
+            competitorTimersCopy.put(competitorId, competitorTimer);
+            competitorTimers.clear();
+            competitorTimers.putAll(competitorTimersCopy);
+
+            if (timerTask == null) {
+                timerTask = new TimerTask() {
+                    @Override
+                    public void run() {
+                        Map<Integer, CompetitorTimer> competitorTimersCopy = new HashMap<>(competitorTimers);
+                        competitorTimersCopy.forEach((id, timer) -> {
                             String formattedElapsedTime = timer.printElapsedTime();
-                            System.out.println("id : "+ id +"formattedElapsedTime:" + formattedElapsedTime);
+                            System.out.println("id : " + id + " formattedElapsedTime:" + formattedElapsedTime);
                             updateDurationById(id, formattedElapsedTime);
+                        });
+                    }
+                };
 
-                    });
-                }
-            };
-
-            // Belirli aralıklarla görevi çalıştır
-            timer.scheduleAtFixedRate(timerTask, 0, 1000); // Her saniye
+                timer.scheduleAtFixedRate(timerTask, 0, 100);
+            }
         }
-    }
+}
 
     public void stopTimer(int competitorId) {
         CompetitorTimer competitorTimer = competitorTimers.get(competitorId);
@@ -66,23 +79,17 @@ public class CompetitorTimerManager {
         }
     }
 
-    /*private void saveElapsedTime(int competitorId) {
-        CompetitorTimer competitorTimer = competitorTimers.get(competitorId);
-
-        if (competitorTimer != null) {
-            String formattedElapsedTime = competitorTimer.getFormattedElapsedTime();
-            System.out.println("formattedElapsedTime:" + formattedElapsedTime);
-            updateDurationById(competitorId, formattedElapsedTime);
-        }
-    }*/
-
     public void updateDurationById(int id, String duration) {
         System.out.println("updateDurationById:"+id +" duration:" + duration);
         // bu id ye ait kayıt var mı
         if (this.defCompetitorsDao.existsById(id)) {
             DefCompetitors competitor = this.defCompetitorsDao.findById(id);
-            if (duration.equals("05.00:00")) {
+
+
+            if (duration.equals("01:00:00") || duration.compareTo("01:00:00") > 0) {
                 competitor.setEliminated(true); // eger süre 5dk ya esitse yarismaciyi ele
+                // bu competitorId'ye ait zamanlayıcıyı kaldır
+                competitorTimers.remove(id);
             }
             competitor.setDuration(duration);
             this.defCompetitorsDao.save(competitor);
