@@ -31,18 +31,26 @@ public class DefCompetitors {
     @Column(name = "sName")
     private String name;
 
+    @Column(name = "sCode")
+    private String code;
+
+    @Column(name = "bIsReady")
+    private boolean isReady;
+
+    @Column(name = "bIsStart")
+    private boolean isStart;
 
     @Column(name = "sStartTime")
     private String startTime;
 
-    @Column(name = "bStopTime")
+    @Column(name = "sStopTime")
     private String stopTime;
 
     @Column(name = "sDuration")
     private String duration;
 
     @Column(name = "bEliminated")
-    private Boolean eliminated;
+    private boolean eliminated;
 
 
 }

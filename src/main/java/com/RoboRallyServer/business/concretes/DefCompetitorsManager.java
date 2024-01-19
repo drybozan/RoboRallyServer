@@ -9,6 +9,8 @@ import com.RoboRallyServer.utilities.timer.CompetitorTimerManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -76,14 +78,15 @@ public class DefCompetitorsManager implements DefCompetitorsService {
             DefCompetitors oldCompetitor = this.defCompetitorsDao.findById(newCompetitor.getId());
             oldCompetitor.setCity(newCompetitor.getCity());
             oldCompetitor.setName(newCompetitor.getName());
-            oldCompetitor.setEliminated(newCompetitor.getEliminated());
-
-            this.defCompetitorsDao.save(oldCompetitor);
+            oldCompetitor.setEliminated(newCompetitor.isEliminated());
 
             //eger kullancı elendiyse manuel olarak timer ı varsa sonlandır.
-            if(newCompetitor.getEliminated()){
+            if(newCompetitor.isEliminated()){
                 timerManager.stopTimer(newCompetitor.getId());
+                oldCompetitor.setReady(false);
+                oldCompetitor.setStart(false);
             }
+            this.defCompetitorsDao.save(oldCompetitor);
 
             return new SuccessResult("Yarışmacı başarıyla güncellendi.");
         } else {
@@ -114,7 +117,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
             // Yarışmacı  için timer'ı başlat
             timerManager.startTimer(id);
-            return new SuccessResult("Id bilgisine göre starTime güncellendi..");
+            return new SuccessResult("Id bilgisine göre startTime güncellendi..");
         } else {
             return new ErrorResult("Id bilgisine göre yarışmacı bulunamadı.");
         }
@@ -134,23 +137,89 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         }
     }
 
-    @Override
-    public Result updateDurationById(int id, String duration) {
-        // bu id ye ait kayıt var mı
-        if (this.defCompetitorsDao.existsById(id)) {
-            DefCompetitors competitor = this.defCompetitorsDao.findById(id);
-            if (duration.equals("05.00:00")) {
-                competitor.setEliminated(true); // eger süre 5dk ya esitse yarismaciyi ele
-            }
-            competitor.setDuration(duration);
-            this.defCompetitorsDao.save(competitor);
 
-            return new SuccessResult("Id bilgisine göre duration güncellendi..");
+//gönderilen kod bilgisne göre kullanıcı varsa ve elenmediyse ready bitini true yapar
+    @Override
+    public Result updateReadyByCode(String code, boolean ready) {
+
+        System.out.println("Code :"+code + " ready :"+ready);
+
+        DefCompetitors defCompetitor = this.defCompetitorsDao.findByCode(code);
+        if (defCompetitor != null) {
+            if(!defCompetitor.isEliminated()){
+                defCompetitor.setReady(ready);
+                this.defCompetitorsDao.save(defCompetitor);
+                return new SuccessResult(code + " koduna sahip yarışmacı için ready alanı güncellendi.");
+            }
+            return new SuccessResult(code + " koduna sahip yarışmacı için elenmiş durumda.");
+        }
+        return new ErrorResult(code + " koduna sahip yarışmacı bulunamadı.");
+    }
+
+    //gönderilen kod bilgisine göre kullanıcı ready ise start bitini true yapar ve sayaç başlatır.
+    @Override
+    public Result updateStartByCode(String code, boolean start) {
+
+        System.out.println("Code :"+code + " start :"+start);
+
+        DefCompetitors defCompetitor = this.defCompetitorsDao.findByCode(code);
+        if (defCompetitor != null) {
+            if(!defCompetitor.isEliminated() ) {
+                if( defCompetitor.isReady() ) {
+                defCompetitor.setStart(start);
+                //defCompetitor.setReady(false);
+
+
+                this.defCompetitorsDao.save(defCompetitor);
+
+                // Yarışmacı  için timer'ı başlat
+                timerManager.startTimer(defCompetitor.getId());
+
+
+                return new SuccessResult(code + " koduna sahip yarışmacı için isStart güncellendi ve sayaç başladı.");
+                }
+                return new ErrorResult(code + " koduna sahip yarışmacı ready komutunu göndermedi.");
+            }
+            return new SuccessResult(code + " koduna sahip yarışmacı elenmiş durumda,sayaç başlatılmadı");
         } else {
-            return new ErrorResult("Id bilgisine göre yarışmacı bulunamadı.");
+            return new ErrorResult(code + " koduna sahip yarışmacı bulunamadı.");
         }
     }
 
+    // gönderilen kod bilgisine göre eğer yarışmacı elenmemişse, hazır ve başlamışsa bunları false a çeker ve timerı durdurur
+    @Override
+    public Result updateReadyAndStartByCode(String code, boolean ready,boolean start) {
+
+        System.out.println("Code :"+code +" ready : "+ready+ " start :"+start );
+        DefCompetitors defCompetitor = this.defCompetitorsDao.findByCode(code);
+
+        if (defCompetitor != null) {
+
+            if(!defCompetitor.isEliminated()) { //eliminated false
+
+                if(defCompetitor.isReady() && defCompetitor.isStart()) { // ready true,start true
+
+                    // yarışmacı için timer ı durdur.
+                    timerManager.stopTimer(defCompetitor.getId());
+
+                    System.out.println("before update : " + defCompetitor);
+
+                    defCompetitor.setReady(ready);
+                    defCompetitor.setStart(start);
+
+                    System.out.println("for save: " + defCompetitor);
+                    this.defCompetitorsDao.save(defCompetitor);
+
+
+                    return new SuccessResult(code + " koduna sahip yarışmacı için isStart ve isReady güncellendi ve sayaç durduruldu.");
+                }
+                return new ErrorResult(code + " koduna sahip yarışmacı ready ve start komutunu göndermedi.");
+            }
+            return new SuccessResult(code + " koduna sahip yarışmacı elenmiş durumda, sayacı yok.");
+        } else {
+            return new ErrorResult(code + " koduna sahip yarışmacı bulunamadı.");
+        }
+    }
 
 
 }

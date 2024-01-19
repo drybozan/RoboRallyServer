@@ -64,10 +64,22 @@ public class DefCompetitorsController {
     }
 
 
-    @PostMapping(value = "/updateDurationById")
-    public Result updateDurationById( @RequestParam  int id, @RequestParam  String duration) {
+    @PostMapping(value = "/updateReadyByCode")
+    public Result updateReadyByCode( @RequestParam String code, @RequestParam  boolean ready) {
 
-        return this.defCompetitorsService.updateDurationById(id,duration);
+        return this.defCompetitorsService.updateReadyByCode(code,ready);
+    }
+
+    @PostMapping(value = "/updateStartByCode")
+    public Result updateStartByCode(@RequestParam String code, @RequestParam  boolean start) {
+
+        return this.defCompetitorsService.updateStartByCode(code,start);
+    }
+
+    @PostMapping(value = "/updateReadyAndStartByCode")
+    public Result updateReadyAndStartByCode(@RequestParam String code,@RequestParam  boolean ready, @RequestParam  boolean start) {
+
+        return this.defCompetitorsService.updateReadyAndStartByCode(code,ready,start);
     }
 
 

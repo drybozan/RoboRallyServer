@@ -29,5 +29,7 @@ public interface DefCompetitorsDao extends JpaRepository<DefCompetitors, Integer
     @Transactional
     DefCompetitors findById(int id);
 
+    DefCompetitors findByCode(String code);
+
 
 }
