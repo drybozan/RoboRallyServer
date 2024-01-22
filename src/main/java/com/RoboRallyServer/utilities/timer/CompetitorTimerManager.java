@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -20,6 +21,8 @@ public class CompetitorTimerManager {
     private final DefCompetitorsDao defCompetitorsDao;
     private final Timer timer = new Timer();
     private TimerTask timerTask; // TimerTask'i bir kere oluştur
+
+
 
 
     @Autowired
@@ -36,6 +39,8 @@ public class CompetitorTimerManager {
     */
 
    public void startTimer(int competitorId) {
+
+       System.out.println("basladi :" +LocalDateTime.now() );
         CompetitorTimer competitorTimer = new CompetitorTimer();
         competitorTimer.startTimer();
 
@@ -65,6 +70,7 @@ public class CompetitorTimerManager {
                 timer.scheduleAtFixedRate(timerTask, 0, 100);
             }
         }
+
     }
 
 
@@ -74,18 +80,14 @@ public class CompetitorTimerManager {
         if (competitorTimer != null) {
 
             String competitorDuration = competitorTimer.stopTimer();
-
-            // Sistem tarihini al
-            LocalDateTime now = LocalDateTime.now();
-            updateStopTime(competitorId,now);
-
             // bu competitorId'ye ait zamanlayıcıyı kaldır
             competitorTimers.remove(competitorId);
 
-            System.out.println("Stop competior id: " + competitorId + " competitorDuration :" + competitorDuration);
+            // Sistem tarihini al
+            LocalDateTime now = LocalDateTime.now();
+            updateStopTime(competitorId,now,competitorDuration);
 
-            //stop edildiğinde eldeki sayaç değerini kaydet
-            updateDurationById(competitorId, competitorDuration);
+            System.out.println("Stop competior id: " + competitorId + " competitorDuration :" + competitorDuration);
 
         }
     }
@@ -132,7 +134,7 @@ public class CompetitorTimerManager {
         }
     }
 
-    public void updateStopTime(int id, LocalDateTime stopTime) {
+    public void updateStopTime(int id, LocalDateTime stopTime,String competitorDuration) {
 
         // bu id ye ait kayıt var mı
         if (this.defCompetitorsDao.existsById(id)) {
@@ -145,7 +147,12 @@ public class CompetitorTimerManager {
             String formattedDateTime = stopTime.format(formatter);
 
             competitor.setStopTime(formattedDateTime);
+            competitor.setDuration(competitorDuration);
+            competitor.setReady(false);
+            competitor.setStart(false);
             this.defCompetitorsDao.save(competitor);
+
+            System.out.println("updateStopTime : "+ competitor);
 
         } else {
             System.out.println("Id bilgisine göre yarışmacı bulunamadı.");

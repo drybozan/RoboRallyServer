@@ -15,14 +15,11 @@ public interface DefCompetitorsService {
 
     Result delete(int id);
     Result update(DefCompetitors competitors);
-
     DataResult<DefCompetitors> getById(int id);
-    Result updateStartTimeById(int id,String startTime);
-    Result updateStopTimeById(int id,String stopTime);
+
     Result updateReadyByCode(String code, boolean ready);
+    Result updateStartByCode(String[] codes);
 
-    Result updateStartByCode(String code, boolean start);
-
-    Result updateReadyAndStartByCode(String code, boolean ready,boolean start);
+    Result updateReadyAndStartByCode(String[] codes);
 
 }

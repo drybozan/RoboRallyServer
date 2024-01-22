@@ -6,19 +6,27 @@ import com.RoboRallyServer.entities.DefCompetitors;
 import com.RoboRallyServer.utilities.results.*;
 import com.RoboRallyServer.utilities.timer.CompetitorTimer;
 import com.RoboRallyServer.utilities.timer.CompetitorTimerManager;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.*;
 
 @Service
 @RequiredArgsConstructor
 public class DefCompetitorsManager implements DefCompetitorsService {
 
     private final DefCompetitorsDao defCompetitorsDao;
-    private final CompetitorTimerManager timerManager;
+    private final Map<Integer, CompetitorTimer> competitorTimers = new HashMap<>();
+    private final Timer timer = new Timer();
+    private TimerTask timerTask; // TimerTask'i bir kere oluştur
+    private ExecutorService executorService = Executors.newFixedThreadPool(5); // Örnek olarak 5 thread
+
+
     @Override
     public Result add(DefCompetitors competitors) {
 
@@ -63,6 +71,15 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         // bu id ye ait kayıt var mı
         if (this.defCompetitorsDao.existsById(id)) {
             this.defCompetitorsDao.deleteById(id);
+
+            // bu competitorId'ye ait zamanlayıcıyı kaldır
+            CompetitorTimer competitorTimer = competitorTimers.get(id);
+
+            if (competitorTimer != null) {
+
+                // bu competitorId'ye ait zamanlayıcıyı kaldır
+                competitorTimers.remove(id);
+            }
             return new SuccessResult("Yarışmacı başarıyla silindi.");
         } else {
             return new ErrorResult("Yarışmacı bilgisi bulunamadı.");
@@ -81,8 +98,8 @@ public class DefCompetitorsManager implements DefCompetitorsService {
             oldCompetitor.setEliminated(newCompetitor.isEliminated());
 
             //eger kullancı elendiyse manuel olarak timer ı varsa sonlandır.
-            if(newCompetitor.isEliminated()){
-                timerManager.stopTimer(newCompetitor.getId());
+            if (newCompetitor.isEliminated()) {
+                stopTimer(newCompetitor.getId());
                 oldCompetitor.setReady(false);
                 oldCompetitor.setStart(false);
             }
@@ -107,46 +124,16 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         }
     }
 
-    @Override
-    public Result updateStartTimeById(int id, String starTime) {
-        // bu id ye ait kayıt var mı
-        if (this.defCompetitorsDao.existsById(id)) {
-            DefCompetitors competitor = this.defCompetitorsDao.findById(id);
-            competitor.setStartTime(starTime);
-            this.defCompetitorsDao.save(competitor);
 
-            // Yarışmacı  için timer'ı başlat
-            timerManager.startTimer(id);
-            return new SuccessResult("Id bilgisine göre startTime güncellendi..");
-        } else {
-            return new ErrorResult("Id bilgisine göre yarışmacı bulunamadı.");
-        }
-    }
-
-    @Override
-    public Result updateStopTimeById(int id, String stopTime) {
-        // bu id ye ait kayıt var mı
-        if (this.defCompetitorsDao.existsById(id)) {
-            DefCompetitors competitor = this.defCompetitorsDao.findById(id);
-            competitor.setStopTime(stopTime);
-            this.defCompetitorsDao.save(competitor);
-            timerManager.stopTimer(id);
-            return new SuccessResult("Id bilgisine göre stopTime güncellendi..");
-        } else {
-            return new ErrorResult("Id bilgisine göre stopTime bulunamadı.");
-        }
-    }
-
-
-//gönderilen kod bilgisne göre kullanıcı varsa ve elenmediyse ready bitini true yapar
+    //gönderilen kod bilgisne göre kullanıcı varsa ve elenmediyse ready bitini true yapar
     @Override
     public Result updateReadyByCode(String code, boolean ready) {
 
-        System.out.println("Code :"+code + " ready :"+ready);
+        //System.out.println("Code :" + code + " ready :" + ready);
 
         DefCompetitors defCompetitor = this.defCompetitorsDao.findByCode(code);
         if (defCompetitor != null) {
-            if(!defCompetitor.isEliminated()){
+            if (!defCompetitor.isEliminated()) {
                 defCompetitor.setReady(ready);
                 this.defCompetitorsDao.save(defCompetitor);
                 return new SuccessResult(code + " koduna sahip yarışmacı için ready alanı güncellendi.");
@@ -156,70 +143,269 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         return new ErrorResult(code + " koduna sahip yarışmacı bulunamadı.");
     }
 
-    //gönderilen kod bilgisine göre kullanıcı ready ise start bitini true yapar ve sayaç başlatır.
+
     @Override
-    public Result updateStartByCode(String code, boolean start) {
+    public Result updateStartByCode(String[] codes) {
+        // CountDownLatch oluşturuluyor, ve her bir kod için birer thread başlatılıyor.
+        CountDownLatch latch = new CountDownLatch(codes.length);
 
-        System.out.println("Code :"+code + " start :"+start);
+        List<Thread> threads = new ArrayList<>();
 
-        DefCompetitors defCompetitor = this.defCompetitorsDao.findByCode(code);
-        if (defCompetitor != null) {
-            if(!defCompetitor.isEliminated() ) {
-                if( defCompetitor.isReady() ) {
-                defCompetitor.setStart(start);
-                //defCompetitor.setReady(false);
+        for (String code : codes) {
+            Thread thread = new Thread(() -> {
+                try {
+                    // System.out.println("Code: " + code + "  start: " + start);
 
+                    DefCompetitors defCompetitor = this.defCompetitorsDao.findByCode(code);
 
-                this.defCompetitorsDao.save(defCompetitor);
+                    if (defCompetitor != null) {
+                        if (!defCompetitor.isEliminated()) {
+                            if (defCompetitor.isReady()) {
 
-                // Yarışmacı  için timer'ı başlat
-                timerManager.startTimer(defCompetitor.getId());
+                                CompetitorTimer competitorTimer = new CompetitorTimer();
+                                LocalDateTime now = LocalDateTime.now();
+                                updateStartTime(defCompetitor.getId(), now);
+                                competitorTimers.put(defCompetitor.getId(), competitorTimer);
 
-
-                return new SuccessResult(code + " koduna sahip yarışmacı için isStart güncellendi ve sayaç başladı.");
+                            } else {
+                                System.out.println(code + " koduna sahip yarışmacı ready komutunu göndermedi.");
+                            }
+                        } else {
+                            System.out.println(code + " koduna sahip yarışmacı elenmiş durumda, sayaç başlatılmadı");
+                        }
+                    } else {
+                        System.out.println(code + " koduna sahip yarışmacı bulunamadı.");
+                    }
+                } finally {
+                    // Thread tamamlandığında latch sayısını azalt
+                    latch.countDown();
                 }
-                return new ErrorResult(code + " koduna sahip yarışmacı ready komutunu göndermedi.");
-            }
-            return new SuccessResult(code + " koduna sahip yarışmacı elenmiş durumda,sayaç başlatılmadı");
-        } else {
-            return new ErrorResult(code + " koduna sahip yarışmacı bulunamadı.");
+            });
+
+            threads.add(thread);
+            thread.start();
         }
+
+        try {
+            // Tüm thread'lerin tamamlanmasını bekleyin
+            latch.await();
+            // Yarışmacılar için timer'ı başlat
+            startTimer();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return new ErrorResult("Thread çalışması kesildi");
+        }
+
+        return new SuccessResult("Sayaçlar başlatıldı.");
     }
+
 
     // gönderilen kod bilgisine göre eğer yarışmacı elenmemişse, hazır ve başlamışsa bunları false a çeker ve timerı durdurur
     @Override
-    public Result updateReadyAndStartByCode(String code, boolean ready,boolean start) {
+    public Result updateReadyAndStartByCode(String[] codes) {
 
-        System.out.println("Code :"+code +" ready : "+ready+ " start :"+start );
-        DefCompetitors defCompetitor = this.defCompetitorsDao.findByCode(code);
+        // Kod sayısı kadar bir CountDownLatch oluşturun
+        CountDownLatch latch = new CountDownLatch(codes.length);
 
-        if (defCompetitor != null) {
+        List<Thread> threads = new ArrayList<>();
 
-            if(!defCompetitor.isEliminated()) { //eliminated false
+        for (String code : codes) {
+            Thread thread = new Thread(() -> {
+                try {
 
-                if(defCompetitor.isReady() && defCompetitor.isStart()) { // ready true,start true
+                    //System.out.println("Code :" + code + " ready : " + ready + " start :" + start);
+                    DefCompetitors defCompetitor = this.defCompetitorsDao.findByCode(code);
 
-                    // yarışmacı için timer ı durdur.
-                    timerManager.stopTimer(defCompetitor.getId());
+                    if (defCompetitor != null) {
 
-                    System.out.println("before update : " + defCompetitor);
+                        if (!defCompetitor.isEliminated()) { //eliminated false
 
-                    defCompetitor.setReady(ready);
-                    defCompetitor.setStart(start);
+                            if (defCompetitor.isStart()) { // ready true,start true
 
-                    System.out.println("for save: " + defCompetitor);
-                    this.defCompetitorsDao.save(defCompetitor);
+                                // yarışmacı için timer ı durdur.
+                                stopTimer(defCompetitor.getId());
 
 
-                    return new SuccessResult(code + " koduna sahip yarışmacı için isStart ve isReady güncellendi ve sayaç durduruldu.");
+                                System.out.println(code + " koduna sahip yarışmacı için isStart ve isReady güncellendi ve sayaç durduruldu.");
+                            } else {
+                                System.out.println(code + " koduna sahip yarışmacı ready ve start komutunu göndermedi.");
+                            }
+                        } else {
+                            System.out.println(code + " koduna sahip yarışmacı elenmiş durumda, sayacı yok.");
+                        }
+                    } else {
+                        System.out.println(code + " koduna sahip yarışmacı bulunamadı.");
+                    }
+                } finally {
+                    // Thread tamamlandığında latch sayısını azalt
+                    latch.countDown();
                 }
-                return new ErrorResult(code + " koduna sahip yarışmacı ready ve start komutunu göndermedi.");
+            });
+
+            threads.add(thread);
+            thread.start();
+        }
+        try {
+            // Tüm thread'lerin tamamlanmasını bekleyin
+            latch.await();
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return new ErrorResult("Thread çalışması kesildi");
+        }
+
+        return new SuccessResult("Sayaçlar durduruldu.");
+
+
+    }
+
+
+    public void startTimer() {
+        System.out.println("basladi: " + LocalDateTime.now());
+
+        synchronized (competitorTimers) {
+
+            System.out.println("competitorTimers.size()" + competitorTimers.size());
+
+
+            List<Thread> threads = new ArrayList<>();
+
+            // Bütün CompetitorTimer nesnelerini aynı anda başlat
+            competitorTimers.forEach((id, timer) -> {
+                Thread startTimerThread = new Thread(() -> {
+                    timer.startTimer();
+                });
+                threads.add(startTimerThread);
+                startTimerThread.start();
+            });
+
+            // Tüm iş parçacıklarının tamamlanmasını bekleyin
+            threads.forEach(thread -> {
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            if (timerTask == null) {
+                timerTask = new TimerTask() {
+                    @Override
+                    public void run() {
+                        synchronized (competitorTimers) {
+                            Iterator<Map.Entry<Integer, CompetitorTimer>> iterator = competitorTimers.entrySet().iterator();
+                            while (iterator.hasNext()) {
+                                Map.Entry<Integer, CompetitorTimer> entry = iterator.next();
+                                Integer id = entry.getKey();
+                                CompetitorTimer timer = entry.getValue();
+                                System.out.println("id : " + id + "timer : " + timer.printElapsedTime());
+
+                                // Asenkron işlem başlat, ancak dönen değeri kullanma
+                                updateDurationById(id, timer.printElapsedTime());
+
+
+                            }
+                        }
+                    }
+                };
+                timer.scheduleAtFixedRate(timerTask, 0, 100);
             }
-            return new SuccessResult(code + " koduna sahip yarışmacı elenmiş durumda, sayacı yok.");
+        }
+    }
+
+    @Async
+    @Transactional
+    public CompletableFuture<Void> updateDurationById(int id, String duration) {
+        System.out.println("updateDurationById:" + id + " duration:" + duration);
+        // bu id ye ait kayıt var mı
+        if (this.defCompetitorsDao.existsById(id) && competitorTimers.get(id) != null) {
+            DefCompetitors competitor = this.defCompetitorsDao.findById(id);
+
+
+            if (duration.equals("01:00:00") || duration.compareTo("01:00:00") > 0) {
+                competitor.setEliminated(true); // eger süre 5dk ya esitse yarismaciyi ele
+                competitor.setReady(false);
+                competitor.setStart(false);
+                // bu competitorId'ye ait zamanlayıcıyı kaldır
+                competitorTimers.remove(id);
+            }
+            competitor.setDuration(duration);
+            this.defCompetitorsDao.save(competitor);
+            // System.out.println("Id bilgisine göre duration güncellendi..");
         } else {
-            return new ErrorResult(code + " koduna sahip yarışmacı bulunamadı.");
+            System.out.println("Id bilgisine göre yarışmacı bulunamadı.");
+        }
+        return CompletableFuture.completedFuture(null);
+    }
+
+
+
+    public void stopTimer(int competitorId) {
+        CompetitorTimer competitorTimer = competitorTimers.get(competitorId);
+
+        if (competitorTimer != null) {
+
+            // bu competitorId'ye ait zamanlayıcıyı kaldır
+            competitorTimers.remove(competitorId);
+
+            String competitorDuration = competitorTimer.stopTimer();
+
+            // Sistem tarihini al
+            LocalDateTime now = LocalDateTime.now();
+            updateStopTime(competitorId, now, competitorDuration);
+
+            System.out.println("Stop competior id: " + competitorId + " competitorDuration :" + competitorDuration);
+
         }
     }
 
 
+
+    public void updateStartTime(int id, LocalDateTime startTime) {
+
+        // bu id ye ait kayıt var mı
+        if (this.defCompetitorsDao.existsById(id)) {
+
+            DefCompetitors competitor = this.defCompetitorsDao.findById(id);
+            // Tarih formatını belirle
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss:SSS");
+
+            // Tarih bilgisini belirli formatta ayarla
+            String formattedDateTime = startTime.format(formatter);
+
+            competitor.setReady(false);
+            competitor.setStart(true);
+            competitor.setStartTime(formattedDateTime);
+
+            this.defCompetitorsDao.save(competitor);
+
+        } else {
+            System.out.println("Id bilgisine göre yarışmacı bulunamadı.");
+        }
+    }
+
+    public void updateStopTime(int id, LocalDateTime stopTime,String competitorDuration) {
+
+        // bu id ye ait kayıt var mı
+        if (this.defCompetitorsDao.existsById(id)) {
+
+            DefCompetitors competitor = this.defCompetitorsDao.findById(id);
+            // Tarih formatını belirle
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss:SSS");
+
+            // Tarih bilgisini belirli formatta ayarla
+            String formattedDateTime = stopTime.format(formatter);
+
+            competitor.setStopTime(formattedDateTime);
+            competitor.setDuration(competitorDuration);
+            competitor.setReady(false);
+            competitor.setStart(false);
+            this.defCompetitorsDao.save(competitor);
+
+            System.out.println("updateStopTime : "+ competitor);
+
+        } else {
+            System.out.println("Id bilgisine göre yarışmacı bulunamadı.");
+        }
+    }
 }
