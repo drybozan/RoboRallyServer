@@ -73,7 +73,7 @@ public class CompetitorTimerManager {
 
     }
 
-
+/*
     public void stopTimer(int competitorId) {
         CompetitorTimer competitorTimer = competitorTimers.get(competitorId);
 
@@ -90,7 +90,7 @@ public class CompetitorTimerManager {
             System.out.println("Stop competior id: " + competitorId + " competitorDuration :" + competitorDuration);
 
         }
-    }
+    }*/
 
     public void updateDurationById(int id, String duration) {
         System.out.println("updateDurationById:" + id + " duration:" + duration);

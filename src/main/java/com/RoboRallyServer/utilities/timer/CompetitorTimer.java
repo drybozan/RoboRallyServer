@@ -1,12 +1,14 @@
 package com.RoboRallyServer.utilities.timer;
 
+import org.springframework.stereotype.Component;
+
 import java.time.Duration;
 import java.time.Instant;
-
+@Component
 public class CompetitorTimer {
 
     private Instant startTime;
-    private volatile boolean isRunning;
+    public volatile boolean isRunning;
 
     public void startTimer() {
         this.startTime = Instant.now();
@@ -58,5 +60,6 @@ public class CompetitorTimer {
 
         return String.format("%02d:%02d:%03d", minutes, seconds, millis);
     }
+
 
 }

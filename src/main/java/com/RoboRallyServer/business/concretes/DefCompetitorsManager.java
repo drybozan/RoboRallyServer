@@ -21,10 +21,13 @@ import java.util.concurrent.*;
 public class DefCompetitorsManager implements DefCompetitorsService {
 
     private final DefCompetitorsDao defCompetitorsDao;
-    private final Map<Integer, CompetitorTimer> competitorTimers = new HashMap<>();
+
+    private final CompetitorTimer competitorTimer;
     private final Timer timer = new Timer();
     private TimerTask timerTask; // TimerTask'i bir kere oluştur
-    private ExecutorService executorService = Executors.newFixedThreadPool(5); // Örnek olarak 5 thread
+
+    // Integer tipinde ID'leri tutan bir Map
+    Map<Integer, String> idMap = new HashMap<>();
 
 
     @Override
@@ -72,14 +75,14 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         if (this.defCompetitorsDao.existsById(id)) {
             this.defCompetitorsDao.deleteById(id);
 
-            // bu competitorId'ye ait zamanlayıcıyı kaldır
+          /*  // bu competitorId'ye ait zamanlayıcıyı kaldır
             CompetitorTimer competitorTimer = competitorTimers.get(id);
 
             if (competitorTimer != null) {
 
                 // bu competitorId'ye ait zamanlayıcıyı kaldır
                 competitorTimers.remove(id);
-            }
+            }*/
             return new SuccessResult("Yarışmacı başarıyla silindi.");
         } else {
             return new ErrorResult("Yarışmacı bilgisi bulunamadı.");
@@ -99,7 +102,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
             //eger kullancı elendiyse manuel olarak timer ı varsa sonlandır.
             if (newCompetitor.isEliminated()) {
-                stopTimer(newCompetitor.getId());
+                //stopTimer(newCompetitor.getId());
                 oldCompetitor.setReady(false);
                 oldCompetitor.setStart(false);
             }
@@ -162,10 +165,15 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                         if (!defCompetitor.isEliminated()) {
                             if (defCompetitor.isReady()) {
 
-                                CompetitorTimer competitorTimer = new CompetitorTimer();
-                                LocalDateTime now = LocalDateTime.now();
-                                updateStartTime(defCompetitor.getId(), now);
-                                competitorTimers.put(defCompetitor.getId(), competitorTimer);
+
+                              /*  LocalDateTime now = LocalDateTime.now();
+
+                                updateStartTime(defCompetitor.getId(), now);*/
+
+                                idMap.put(defCompetitor.getId(), defCompetitor.getName());
+
+                                System.out.println("calisti 1 : "+ LocalDateTime.now());
+                                System.out.println(code + " koduna sahip yarışmacı için isStart güncellendi ve sayaç başladı.");
 
                             } else {
                                 System.out.println(code + " koduna sahip yarışmacı ready komutunu göndermedi.");
@@ -189,8 +197,9 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         try {
             // Tüm thread'lerin tamamlanmasını bekleyin
             latch.await();
+            System.out.println("calisti 2: "+ LocalDateTime.now());
             // Yarışmacılar için timer'ı başlat
-            startTimer();
+            startTimer(idMap);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return new ErrorResult("Thread çalışması kesildi");
@@ -213,22 +222,19 @@ public class DefCompetitorsManager implements DefCompetitorsService {
             Thread thread = new Thread(() -> {
                 try {
 
-                    //System.out.println("Code :" + code + " ready : " + ready + " start :" + start);
                     DefCompetitors defCompetitor = this.defCompetitorsDao.findByCode(code);
 
                     if (defCompetitor != null) {
 
                         if (!defCompetitor.isEliminated()) { //eliminated false
 
-                            if (defCompetitor.isStart()) { // ready true,start true
+                            if (defCompetitor.isStart()) { // start true
 
-                                // yarışmacı için timer ı durdur.
-                                stopTimer(defCompetitor.getId());
-
-
-                                System.out.println(code + " koduna sahip yarışmacı için isStart ve isReady güncellendi ve sayaç durduruldu.");
+                                idMap.remove(defCompetitor.getId(), defCompetitor.getName());
+                                System.out.println("calisti 4 : "+ LocalDateTime.now());
+                                System.out.println(code + " koduna sahip yarışmacı için isStart güncellendi ve sayaç durduruldu.");
                             } else {
-                                System.out.println(code + " koduna sahip yarışmacı ready ve start komutunu göndermedi.");
+                                System.out.println(code + " koduna sahip yarışmacı  start komutunu göndermedi.");
                             }
                         } else {
                             System.out.println(code + " koduna sahip yarışmacı elenmiş durumda, sayacı yok.");
@@ -248,7 +254,13 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         try {
             // Tüm thread'lerin tamamlanmasını bekleyin
             latch.await();
-
+            LocalDateTime now = LocalDateTime.now();
+            System.out.println("calisti 5 : "+ LocalDateTime.now());
+            for (String code : codes) {
+                int defCompetitorId = this.defCompetitorsDao.findByCode(code).getId();
+                // yarışmacı için timer ı durdur.
+                updateStopTime(defCompetitorId, now);
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return new ErrorResult("Thread çalışması kesildi");
@@ -260,74 +272,63 @@ public class DefCompetitorsManager implements DefCompetitorsService {
     }
 
 
-    public void startTimer() {
-        System.out.println("basladi: " + LocalDateTime.now());
 
-        synchronized (competitorTimers) {
+    public void startTimer(Map<Integer, String> idMap) {
 
-            System.out.println("competitorTimers.size()" + competitorTimers.size());
+        System.out.println("calisti 3 : "+ LocalDateTime.now());
 
+        competitorTimer.startTimer();
 
-            List<Thread> threads = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
 
-            // Bütün CompetitorTimer nesnelerini aynı anda başlat
-            competitorTimers.forEach((id, timer) -> {
-                Thread startTimerThread = new Thread(() -> {
-                    timer.startTimer();
-                });
-                threads.add(startTimerThread);
-                startTimerThread.start();
-            });
+        for (Map.Entry<Integer, String> entry : idMap.entrySet()) {
+            Integer id = entry.getKey();
+            updateStartTime(id, now);
+        }
 
-            // Tüm iş parçacıklarının tamamlanmasını bekleyin
-            threads.forEach(thread -> {
-                try {
-                    thread.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            });
+        if (timerTask == null) {
+            timerTask = new TimerTask() {
+                @Override
+                public void run() {
+                    // Güvenli bir kopya oluştur
+                    Map<Integer, String> idMapCopy = new HashMap<>(idMap);
 
-            if (timerTask == null) {
-                timerTask = new TimerTask() {
-                    @Override
-                    public void run() {
-                        synchronized (competitorTimers) {
-                            Iterator<Map.Entry<Integer, CompetitorTimer>> iterator = competitorTimers.entrySet().iterator();
-                            while (iterator.hasNext()) {
-                                Map.Entry<Integer, CompetitorTimer> entry = iterator.next();
-                                Integer id = entry.getKey();
-                                CompetitorTimer timer = entry.getValue();
-                                System.out.println("id : " + id + "timer : " + timer.printElapsedTime());
+                    //System.out.println("idMap.isEmpty() : "+ idMapCopy.isEmpty());
+                    if (idMapCopy.isEmpty()) {
+                       // System.out.println("stop edildi *********************************");
+                        competitorTimer.stopTimer();
+                        timerTask.cancel();
+                        timerTask = null;
+                    } else {
 
-                                // Asenkron işlem başlat, ancak dönen değeri kullanma
-                                updateDurationById(id, timer.printElapsedTime());
-
-
-                            }
+                        System.out.println("Timer değeri : " + competitorTimer.printElapsedTime());
+                        String duration = competitorTimer.printElapsedTime();
+                        // Güvenli kopya üzerinde döngü yap
+                        for (Map.Entry<Integer, String> entry : idMapCopy.entrySet()) {
+                            Integer id = entry.getKey();
+                            updateDurationById(id, duration);
                         }
                     }
-                };
-                timer.scheduleAtFixedRate(timerTask, 0, 100);
-            }
+                }
+            };
+            timer.scheduleAtFixedRate(timerTask, 0, 1);
         }
     }
 
-    @Async
-    @Transactional
-    public CompletableFuture<Void> updateDurationById(int id, String duration) {
-        System.out.println("updateDurationById:" + id + " duration:" + duration);
+    public  void updateDurationById(int id, String duration) {
+
+       System.out.println("updateDurationById:" + id + " duration:" + duration);
         // bu id ye ait kayıt var mı
-        if (this.defCompetitorsDao.existsById(id) && competitorTimers.get(id) != null) {
+        if (this.defCompetitorsDao.existsById(id)) {
             DefCompetitors competitor = this.defCompetitorsDao.findById(id);
 
 
-            if (duration.equals("01:00:00") || duration.compareTo("01:00:00") > 0) {
+            if (duration.equals("02:00:00") || duration.compareTo("02:00:00") > 0) {
                 competitor.setEliminated(true); // eger süre 5dk ya esitse yarismaciyi ele
                 competitor.setReady(false);
                 competitor.setStart(false);
-                // bu competitorId'ye ait zamanlayıcıyı kaldır
-                competitorTimers.remove(id);
+                //map ten bu yarışmacıyı çıkar , artık timer değerini alamasın.
+                idMap.remove(id);
             }
             competitor.setDuration(duration);
             this.defCompetitorsDao.save(competitor);
@@ -335,34 +336,12 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         } else {
             System.out.println("Id bilgisine göre yarışmacı bulunamadı.");
         }
-        return CompletableFuture.completedFuture(null);
+
     }
-
-
-
-    public void stopTimer(int competitorId) {
-        CompetitorTimer competitorTimer = competitorTimers.get(competitorId);
-
-        if (competitorTimer != null) {
-
-            // bu competitorId'ye ait zamanlayıcıyı kaldır
-            competitorTimers.remove(competitorId);
-
-            String competitorDuration = competitorTimer.stopTimer();
-
-            // Sistem tarihini al
-            LocalDateTime now = LocalDateTime.now();
-            updateStopTime(competitorId, now, competitorDuration);
-
-            System.out.println("Stop competior id: " + competitorId + " competitorDuration :" + competitorDuration);
-
-        }
-    }
-
 
 
     public void updateStartTime(int id, LocalDateTime startTime) {
-
+        System.out.println("calisti 7: "+ LocalDateTime.now());
         // bu id ye ait kayıt var mı
         if (this.defCompetitorsDao.existsById(id)) {
 
@@ -384,7 +363,8 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         }
     }
 
-    public void updateStopTime(int id, LocalDateTime stopTime,String competitorDuration) {
+    public void updateStopTime(int id, LocalDateTime stopTime) {
+        System.out.println("calisti 6 : "+ LocalDateTime.now());
 
         // bu id ye ait kayıt var mı
         if (this.defCompetitorsDao.existsById(id)) {
@@ -397,12 +377,14 @@ public class DefCompetitorsManager implements DefCompetitorsService {
             String formattedDateTime = stopTime.format(formatter);
 
             competitor.setStopTime(formattedDateTime);
-            competitor.setDuration(competitorDuration);
             competitor.setReady(false);
             competitor.setStart(false);
             this.defCompetitorsDao.save(competitor);
 
-            System.out.println("updateStopTime : "+ competitor);
+            //map ten bu yarışmacıyı çıkar , artık timer değerini alamasın.
+            //idMap.remove(id);
+
+            System.out.println("updateStopTime : " + competitor);
 
         } else {
             System.out.println("Id bilgisine göre yarışmacı bulunamadı.");
