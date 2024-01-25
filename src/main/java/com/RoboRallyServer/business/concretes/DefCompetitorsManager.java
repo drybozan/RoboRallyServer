@@ -6,6 +6,7 @@ import com.RoboRallyServer.entities.DefCompetitors;
 import com.RoboRallyServer.utilities.results.*;
 import com.RoboRallyServer.utilities.timer.CompetitorTimer;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -27,14 +28,19 @@ public class DefCompetitorsManager implements DefCompetitorsService {
     Map<Integer, String> idMap = new HashMap<>();
 
 
+
     @Override
     public Result add(DefCompetitors competitors) {
 
         if (competitors == null) {
             return new SuccessResult("Yarışmacı bilgileri null olamaz.");
         }
+
+        // Yarışmacı bilgilerini veritabanına kaydet
         this.defCompetitorsDao.save(competitors);
+
         return new SuccessResult("Yarışmacı başarıyla kaydedildi.");
+
     }
 
     @Override
@@ -260,11 +266,12 @@ public class DefCompetitorsManager implements DefCompetitorsService {
             updateStartTime(id, now);
         }
 
+        //saniyede bir çalışan görev başlat
         if (timerTask == null) {
             timerTask = new TimerTask() {
                 @Override
                 public void run() {
-                    // Güvenli bir kopya oluştur
+                    // ana map ten Güvenli bir kopya oluştur
                     Map<Integer, String> idMapCopy = new HashMap<>(idMap);
 
                     if (idMapCopy.isEmpty()) {
