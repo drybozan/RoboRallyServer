@@ -6,21 +6,18 @@ import com.RoboRallyServer.entities.DefCompetitors;
 import com.RoboRallyServer.utilities.results.*;
 import com.RoboRallyServer.utilities.timer.CompetitorTimer;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.*;
+
 
 @Service
 @RequiredArgsConstructor
 public class DefCompetitorsManager implements DefCompetitorsService {
 
     private final DefCompetitorsDao defCompetitorsDao;
-
-    //private final CompetitorTimer competitorTimer;
     private final Timer timer = new Timer();
     private TimerTask timerTask; // TimerTask'i bir kere oluştur
 
