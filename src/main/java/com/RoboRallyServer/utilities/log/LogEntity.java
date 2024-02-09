@@ -1,12 +1,11 @@
-package com.sunnyWalkmanServer.utilities.log;
+package com.RoboRallyServer.utilities.log;
+
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
 
 
 @Data

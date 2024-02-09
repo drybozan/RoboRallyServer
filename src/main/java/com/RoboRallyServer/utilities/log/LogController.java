@@ -1,6 +1,6 @@
-package com.sunnyWalkmanServer.utilities.log;
+package com.RoboRallyServer.utilities.log;
 
-import com.sunnyWalkmanServer.utilities.results.Result;
+import com.RoboRallyServer.utilities.results.Result;
 import org.springframework.core.io.Resource;
 
 import lombok.AllArgsConstructor;

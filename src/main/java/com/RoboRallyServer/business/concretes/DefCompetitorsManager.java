@@ -3,9 +3,12 @@ package com.RoboRallyServer.business.concretes;
 import com.RoboRallyServer.business.abstracts.DefCompetitorsService;
 import com.RoboRallyServer.dataAccess.abstracts.DefCompetitorsDao;
 import com.RoboRallyServer.entities.DefCompetitors;
+import com.RoboRallyServer.utilities.log.LogEntity;
+import com.RoboRallyServer.utilities.log.LogService;
 import com.RoboRallyServer.utilities.results.*;
 import com.RoboRallyServer.utilities.timer.CompetitorTimer;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -28,6 +31,10 @@ public class DefCompetitorsManager implements DefCompetitorsService {
     // Tarih formatını belirle
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss:SSS");
 
+    @Autowired
+    private final LogService logService;
+    LogEntity logEntity = new LogEntity();
+
 
     @Override
     public Result add(DefCompetitors competitors) {
@@ -38,6 +45,13 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
         // Yarışmacı bilgilerini veritabanına kaydet
         this.defCompetitorsDao.save(competitors);
+
+        logEntity.setDate(LocalDateTime.now().format(formatter));
+        logEntity.setMessage("Yarışmacı Kaydedildi. Yarışmacı bilgileri: " + competitors);
+        logEntity.setSender(competitors.getName());
+        logEntity.setMessageType("SUCCESS");
+
+        logService.writeLog(logEntity);
 
         return new SuccessResult("Yarışmacı başarıyla kaydedildi.");
 
@@ -102,10 +116,25 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                 idMap.remove(newCompetitor.getId());
                 oldCompetitor.setReady(false);
                 oldCompetitor.setStart(false);
+
+                logEntity.setDate(LocalDateTime.now().format(formatter));
+                logEntity.setMessage("Yarışmacı elendi . Sayacı durduruldu.");
+                logEntity.setSender(newCompetitor.getName());
+                logEntity.setMessageType("INFO");
+
+                logService.writeLog(logEntity);
             }
             this.defCompetitorsDao.save(oldCompetitor);
 
+            logEntity.setDate(LocalDateTime.now().format(formatter));
+            logEntity.setMessage("Yarışmacı başarıyla güncellendi. Yarışmacı bilgileri: " + this.defCompetitorsDao.findById(newCompetitor.getId()));
+            logEntity.setSender(newCompetitor.getName());
+            logEntity.setMessageType("SUCCESS");
+
+            logService.writeLog(logEntity);
+
             return new SuccessResult("Yarışmacı başarıyla güncellendi.");
+
         } else {
             return new ErrorResult("Yarışmacı bilgisi bulunamadı.");
         }
@@ -127,17 +156,32 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
     //gönderilen kod bilgisne göre kullanıcı varsa ve elenmediyse ready bitini true yapar
     @Override
-    public Result updateReadyByCode(String code, boolean ready) {
-
-
+    public Result updateReadyByCode(String code) {
         DefCompetitors defCompetitor = this.defCompetitorsDao.findByCode(code);
+
         if (defCompetitor != null) {
             if (!defCompetitor.isEliminated()) {
-                defCompetitor.setReady(ready);
+                defCompetitor.setReady(true);
                 this.defCompetitorsDao.save(defCompetitor);
+
+                logEntity.setDate(LocalDateTime.now().format(formatter));
+                logEntity.setMessage(defCompetitor.getName() + " ready komutunu gönderdi. Kod :  " + code );
+                logEntity.setSender(defCompetitor.getName());
+                logEntity.setMessageType("INFO");
+
+                logService.writeLog(logEntity);
+
                 return new SuccessResult(code + " koduna sahip yarışmacı için ready alanı güncellendi.");
             }
-            return new SuccessResult(code + " koduna sahip yarışmacı için elenmiş durumda.");
+            logEntity.setDate(LocalDateTime.now().format(formatter));
+            logEntity.setMessage(defCompetitor.getName() + " ready komutu gönderdi ama elenmiş durumda. ready kodu : " + code);
+            logEntity.setSender(defCompetitor.getName());
+            logEntity.setMessageType("ERROR");
+
+            logService.writeLog(logEntity);
+
+            return new SuccessResult(code + " koduna sahip yarışmacı  elenmiş durumda.");
+
         }
         return new ErrorResult(code + " koduna sahip yarışmacı bulunamadı.");
     }
@@ -161,14 +205,33 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
                             System.out.println("id :" + id);
                         }
+                        logEntity.setDate(LocalDateTime.now().format(formatter));
+                        logEntity.setMessage(defCompetitor.getName() + " start komutunu gönderdi. Kod :  " + code );
+                        logEntity.setSender(defCompetitor.getName());
+                        logEntity.setMessageType("INFO");
+
+                        logService.writeLog(logEntity);
 
                         System.out.println(code + " koduna sahip yarışmacı için isStart güncellendi ve sayaç başladı.");
 
                     } else {
                         System.out.println(code + " koduna sahip yarışmacı ready komutunu göndermedi.");
+
+                        logEntity.setDate(LocalDateTime.now().format(formatter));
+                        logEntity.setMessage(defCompetitor.getName() + " start komutunu gönderdi ama daha önce ready komutunu göndermedi ! Kod :" + code);
+                        logEntity.setSender(defCompetitor.getName());
+                        logEntity.setMessageType("ERROR");
+
+                        logService.writeLog(logEntity);
                     }
                 } else {
                     System.out.println(code + " koduna sahip yarışmacı elenmiş durumda, sayaç başlatılmadı");
+
+                    logEntity.setDate(LocalDateTime.now().format(formatter));
+                    logEntity.setMessage(defCompetitor.getName() + " start komutu gönderdi ama elenmiş durumda, sayaç başlatılmadı");
+                    logEntity.setSender(defCompetitor.getName());
+                    logEntity.setMessageType("ERROR");
+                    logService.writeLog(logEntity);
                 }
             } else {
                 System.out.println(code + " koduna sahip yarışmacı bulunamadı.");
@@ -201,6 +264,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
             // başlangıç tarih bilgisini belirli formatta ayarla
             String formattedDateTime = LocalDateTime.now().format(formatter);
 
+
             if (optionalCompetitor.isPresent()) {
                 DefCompetitors competitor = optionalCompetitor.get();
                 competitor.setReady(false);
@@ -208,6 +272,12 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                 competitor.setStartTime(formattedDateTime);
 
                 this.defCompetitorsDao.save(competitor);
+
+                logEntity.setDate(formattedDateTime);
+                logEntity.setMessage(competitor.getName() + " için sayaç başladı.Yarışmacı bilgileri : " + competitor);
+                logEntity.setSender(competitor.getName());
+                logEntity.setMessageType("INFO");
+                logService.writeLog(logEntity);
 
 
             } else {
@@ -254,6 +324,13 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                             competitor.setStart(false);
                             DefCompetitors stoppedCompetitor = this.defCompetitorsDao.save(competitor);
                             System.out.println("stoppedCompetitor : " + stoppedCompetitor);
+
+                            logEntity.setDate(formattedDateTime);
+                            logEntity.setMessage(stoppedCompetitor.getName() + " parkuru bitirdi.Sayaç durduruldu.Yarışmacı bilgileri : " + stoppedCompetitor);
+                            logEntity.setSender(stoppedCompetitor.getName());
+                            logEntity.setMessageType("INFO");
+                            logService.writeLog(logEntity);
+
                         } else {
                             System.out.println("Id bilgisine göre yarışmacı bulunamadı.");
                         }
@@ -262,9 +339,21 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                         System.out.println(code + " koduna sahip yarışmacı için isStart güncellendi ve sayaç durduruldu.");
                     } else {
                         System.out.println(code + " koduna sahip yarışmacı  start komutunu göndermedi.");
+
+                        logEntity.setDate(LocalDateTime.now().format(formatter));
+                        logEntity.setMessage(defCompetitor.getName() + " daha önce start komutunu göndermedi.Yarışmacı bilgileri : " + defCompetitor);
+                        logEntity.setSender(defCompetitor.getName());
+                        logEntity.setMessageType("ERROR");
+                        logService.writeLog(logEntity);
                     }
                 } else {
                     System.out.println(code + " koduna sahip yarışmacı elenmiş durumda, sayacı yok.");
+
+                    logEntity.setDate(LocalDateTime.now().format(formatter));
+                    logEntity.setMessage(defCompetitor.getName() + " koduna sahip yarışmacı elenmiş durumda.Yarışmacı bilgileri : " + defCompetitor);
+                    logEntity.setSender(defCompetitor.getName());
+                    logEntity.setMessageType("ERROR");
+                    logService.writeLog(logEntity);
                 }
             } else {
                 System.out.println(code + " koduna sahip yarışmacı bulunamadı.");
@@ -325,13 +414,28 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                             competitor.setEliminated(true);
                             competitor.setReady(false);
                             competitor.setStart(false);
+                            competitor.setStopTime(LocalDateTime.now().format(formatter));
                             // map'ten bu yarışmacıyı çıkar, artık timer değerini alamasın.
                             idMap.remove(id);
+
+                            competitor.setDuration(duration);
+                            DefCompetitors savedCompetitor = this.defCompetitorsDao.save(competitor);
+                            System.out.println("updatedCompetitor:" + savedCompetitor);
+
+                            logEntity.setDate(LocalDateTime.now().format(formatter));
+                            logEntity.setMessage(savedCompetitor.getName() + " 5 dakika  boyunca parkuru tamamlayamadı.Yarışmacı elendi. Yarışmacı bilgileri :" + savedCompetitor);
+                            logEntity.setSender(savedCompetitor.getName());
+                            logEntity.setMessageType("INFO");
+                            logService.writeLog(logEntity);
+
+                        }else{
+
+                            competitor.setDuration(duration);
+                            DefCompetitors savedCompetitor = this.defCompetitorsDao.save(competitor);
+                            System.out.println("updatedCompetitor:" + savedCompetitor);
+
                         }
 
-                        competitor.setDuration(duration);
-                        DefCompetitors savedCompetitor = this.defCompetitorsDao.save(competitor);
-                        System.out.println("updatedCompetitor:" + savedCompetitor);
                     }
                 }
             } else {
