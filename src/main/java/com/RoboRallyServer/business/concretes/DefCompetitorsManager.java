@@ -240,7 +240,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         }
 
         // idler toplandıktan sonra start çalışsın
-        startTimer(idMap);
+        startTimer();
 
         // Map'ten sadece key'leri al
         Integer[] idArrayStart = idMap.keySet().toArray(new Integer[0]);
@@ -309,7 +309,11 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                         System.out.println("********** stop id from map :" + defCompetitor.getId());
 
                         CompetitorTimer timer = idMap.get(defCompetitor.getId());
+
+
                         idMap.remove(defCompetitor.getId());
+
+
 
                         DefCompetitors competitor = this.defCompetitorsDao.findById(defCompetitor.getId());
 
@@ -359,31 +363,26 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                 System.out.println(code + " koduna sahip yarışmacı bulunamadı.");
             }
         }
-        // startTimer metodunu çağırıp elemanları güncelle
-        startTimer(idMap);
+
 
         return new SuccessResult("Sayaçlar durduruldu.");
 
     }
 
 
-    public void startTimer(Map<Integer, CompetitorTimer> idMap) {
-
+    public void startTimer() {
         //saniyede bir çalışan görev başlat
         if (timerTask == null) {
             timerTask = new TimerTask() {
                 @Override
                 public void run() {
+                    Set<Integer> idSet = new HashSet<>(idMap.keySet()); // idMap'ten idSet oluştur
 
-                    if (idMap.isEmpty()) {
+                    if (idSet.isEmpty()) {
                         timerTask.cancel();
                         timerTask = null;
                     } else {
-
-                        Integer[] idArray = idMap.keySet().toArray(new Integer[0]);
-
-                        updateDurationById(idArray);
-
+                        updateDurationById(idSet); // idSet'i kullanarak updateDurationById metodunu çağır
                     }
                 }
             };
@@ -392,31 +391,27 @@ public class DefCompetitorsManager implements DefCompetitorsService {
     }
 
 
-    public void updateDurationById(Integer[] idArray) {
+    public void updateDurationById(Set<Integer> idSet) {
+        for (Integer id : idSet) {
+            //System.out.println("************* updateDurationById idSet.size() : " + idSet.size());
+            // Bu id ye ait kayıt var mı
+            Optional<DefCompetitors> optionalCompetitor = this.defCompetitorsDao.findById(id);
 
-        for (Integer id : idArray) {
+            if (optionalCompetitor.isPresent()) {
+                DefCompetitors competitor = optionalCompetitor.get();
 
-            CompetitorTimer timer = idMap.get(id);
+                if (competitor.isStart()) {
+                    CompetitorTimer timer = idMap.get(id);
 
-            if (timer != null) {
-                String duration = timer.printElapsedTime();
-                System.out.println("updateDurationById:" + id + " duration:" + duration);
-
-                // bu id ye ait kayıt var mı
-                Optional<DefCompetitors> optionalCompetitor = this.defCompetitorsDao.findById(id);
-
-                if (optionalCompetitor.isPresent()) {
-                    DefCompetitors competitor = optionalCompetitor.get();
-
-                    if(competitor.isStart()) {
+                    if (timer != null) {
+                        String duration = timer.printElapsedTime();
+                        System.out.println("update duration Id:" + id + " duration:" + duration);
 
                         if (duration.equals("02:00:00") || duration.compareTo("02:00:00") > 0) {
                             competitor.setEliminated(true);
                             competitor.setReady(false);
                             competitor.setStart(false);
                             competitor.setStopTime(LocalDateTime.now().format(formatter));
-                            // map'ten bu yarışmacıyı çıkar, artık timer değerini alamasın.
-                            idMap.remove(id);
 
                             competitor.setDuration(duration);
                             DefCompetitors savedCompetitor = this.defCompetitorsDao.save(competitor);
@@ -428,22 +423,25 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                             logEntity.setMessageType("INFO");
                             logService.writeLog(logEntity);
 
-                        }else{
-
+                            // idSet'ten de kaldır
+                            idSet.remove(id);
+                            // idMap'ten de kaldır
+                            idMap.remove(id);
+                        } else {
                             competitor.setDuration(duration);
                             DefCompetitors savedCompetitor = this.defCompetitorsDao.save(competitor);
                             System.out.println("updatedCompetitor:" + savedCompetitor);
-
                         }
-
                     }
                 }
             } else {
+                // idSet'ten de kaldır
+                idSet.remove(id);
                 System.out.println("updateDurationById Id bilgisine göre yarışmacı bulunamadı.");
             }
         }
-
     }
+
 
 
 
