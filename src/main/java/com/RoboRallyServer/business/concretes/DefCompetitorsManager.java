@@ -123,7 +123,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
 
                 logEntity.setDate(LocalDateTime.now().format(formatter));
-                logEntity.setMessage("Yarışmacı elendi . Sayacı durduruldu.");
+                logEntity.setMessage("Yarışmacı elendi .");
                 logEntity.setSender(newCompetitor.getName());
                 logEntity.setMessageType("INFO");
 
@@ -162,30 +162,32 @@ public class DefCompetitorsManager implements DefCompetitorsService {
     //gönderilen kod bilgisne göre kullanıcı varsa ve elenmediyse ready bitini true yapar
     @Override
     public Result updateReadyByCode(String code) {
+        System.out.println(" ready komutu geldi : " + code);
         DefCompetitors defCompetitor = this.defCompetitorsDao.findByCode(code);
-
+        System.out.println(" ready defCompetitor : " + defCompetitor.getName());
+        LogEntity logEntityy = new LogEntity();
         if (defCompetitor != null) {
             if (!defCompetitor.isEliminated()) {
                 defCompetitor.setReady(true);
                 this.defCompetitorsDao.save(defCompetitor);
 
-                logEntity.setDate(LocalDateTime.now().format(formatter));
-                logEntity.setMessage(defCompetitor.getName() + " ready komutunu gönderdi. Kod :  " + code );
-                logEntity.setSender(defCompetitor.getName());
-                logEntity.setMessageType("INFO");
+                logEntityy.setDate(LocalDateTime.now().format(formatter));
+                logEntityy.setMessage(defCompetitor.getName() + " ready komutunu gönderdi.Kod :  " + code  + " Yarışmacı Bilgileri : " + defCompetitor );
+                logEntityy.setSender(defCompetitor.getName());
+                logEntityy.setMessageType("INFO");
 
-                logService.writeLog(logEntity);
+                logService.writeLog(logEntityy);
 
                 return new SuccessResult(code + " koduna sahip yarışmacı için ready alanı güncellendi.");
+            }else {
+                logEntity.setDate(LocalDateTime.now().format(formatter));
+                logEntity.setMessage(defCompetitor.getName() + " ready komutu gönderdi ama elenmiş durumda. Kod :  " + code + " Yarışmacı Bilgileri : " + defCompetitor);
+                logEntity.setSender(defCompetitor.getName());
+                logEntity.setMessageType("ERROR");
+
+                logService.writeLog(logEntity);
+                return new SuccessResult(code + " koduna sahip yarışmacı  elenmiş durumda.");
             }
-            logEntity.setDate(LocalDateTime.now().format(formatter));
-            logEntity.setMessage(defCompetitor.getName() + " ready komutu gönderdi ama elenmiş durumda. ready kodu : " + code);
-            logEntity.setSender(defCompetitor.getName());
-            logEntity.setMessageType("ERROR");
-
-            logService.writeLog(logEntity);
-
-            return new SuccessResult(code + " koduna sahip yarışmacı  elenmiş durumda.");
 
         }
         return new ErrorResult(code + " koduna sahip yarışmacı bulunamadı.");
@@ -223,7 +225,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                         System.out.println(code + " koduna sahip yarışmacı ready komutunu göndermedi.");
 
                         logEntity.setDate(LocalDateTime.now().format(formatter));
-                        logEntity.setMessage(defCompetitor.getName() + " start komutunu gönderdi ama daha önce ready komutunu göndermedi ! Kod :" + code);
+                        logEntity.setMessage(defCompetitor.getName() + " start komutunu gönderdi ama daha önce ready komutunu göndermedi ! Kod :  " + code  + "Yarışmacı Bilgileri : " + defCompetitor);
                         logEntity.setSender(defCompetitor.getName());
                         logEntity.setMessageType("ERROR");
 
@@ -233,7 +235,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                     System.out.println(code + " koduna sahip yarışmacı elenmiş durumda, sayaç başlatılmadı");
 
                     logEntity.setDate(LocalDateTime.now().format(formatter));
-                    logEntity.setMessage(defCompetitor.getName() + " start komutu gönderdi ama elenmiş durumda, sayaç başlatılmadı");
+                    logEntity.setMessage(defCompetitor.getName() + " start komutu gönderdi ama elenmiş durumda, sayaç başlatılmadı.Kod :  " + code  + "Yarışmacı Bilgileri : " + defCompetitor);
                     logEntity.setSender(defCompetitor.getName());
                     logEntity.setMessageType("ERROR");
                     logService.writeLog(logEntity);
@@ -350,7 +352,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                         System.out.println(code + " koduna sahip yarışmacı  start komutunu göndermedi.");
 
                         logEntity.setDate(LocalDateTime.now().format(formatter));
-                        logEntity.setMessage(defCompetitor.getName() + " daha önce start komutunu göndermedi.Yarışmacı bilgileri : " + defCompetitor);
+                        logEntity.setMessage(defCompetitor.getName() + " daha önce start komutunu göndermedi.Kod :  " + code  + "Yarışmacı Bilgileri : " + defCompetitor);
                         logEntity.setSender(defCompetitor.getName());
                         logEntity.setMessageType("ERROR");
                         logService.writeLog(logEntity);
