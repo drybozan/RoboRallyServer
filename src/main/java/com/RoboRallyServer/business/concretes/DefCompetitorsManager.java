@@ -90,9 +90,13 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
         // bu id ye ait kayıt var mı
         if (this.defCompetitorsDao.existsById(id)) {
+
+            logService.deleteLogFile(this.defCompetitorsDao.findById(id).getName()+".json"); //log dosyasını sil
+
             this.defCompetitorsDao.deleteById(id);
             // sayacını kaldır
             idMap.remove(id);
+
             return new SuccessResult("Yarışmacı başarıyla silindi.");
         } else {
             return new ErrorResult("Yarışmacı bilgisi bulunamadı.");
@@ -116,6 +120,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                 idMap.remove(newCompetitor.getId());
                 oldCompetitor.setReady(false);
                 oldCompetitor.setStart(false);
+
 
                 logEntity.setDate(LocalDateTime.now().format(formatter));
                 logEntity.setMessage("Yarışmacı elendi . Sayacı durduruldu.");
@@ -323,7 +328,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                         if (competitor != null) {
 
                             competitor.setStopTime(formattedDateTime);
-                            competitor.setDuration(timer.printElapsedTime());
+                            competitor.setDuration(timer.stopTimer());
                             competitor.setReady(false);
                             competitor.setStart(false);
                             DefCompetitors stoppedCompetitor = this.defCompetitorsDao.save(competitor);

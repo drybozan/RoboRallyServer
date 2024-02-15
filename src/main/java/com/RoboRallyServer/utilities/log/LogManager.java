@@ -1,7 +1,10 @@
 package com.RoboRallyServer.utilities.log;
 
+import com.RoboRallyServer.utilities.results.DataResult;
+import com.RoboRallyServer.utilities.results.ErrorDataResult;
 import com.RoboRallyServer.utilities.results.Result;
 
+import com.RoboRallyServer.utilities.results.SuccessDataResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ByteArrayResource;
@@ -11,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -18,17 +22,16 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Service
 public class LogManager implements LogService {
 
 
     @Override
-    public Result writeLog(LogEntity logEntity)  {
+    public Result writeLog(LogEntity logEntity) {
 
 
         // oluşturacağın dizinin yolunu belirt
@@ -85,7 +88,6 @@ public class LogManager implements LogService {
     }
 
 
-
     // Dosyayı oluştur veya varsa kontrol et
     @Override
     public Result createOrCheckFile(File file) {
@@ -112,10 +114,10 @@ public class LogManager implements LogService {
 
 
     @Override
-    public ResponseEntity<Resource> getLogFileByCategoryAndDate(String logFolderName,String logFileName) throws IOException {
-/*
+    public ResponseEntity<Resource> getLogFileByName(String logFileName) throws IOException {
+
         // log un tutulduğu klasör yolu
-        Path pathDirectory = Paths.get(File.separator +"home"+File.separator + username + File.separator+ "WalkmanLogs" + File.separator +  logFolderName);
+        Path pathDirectory = Paths.get("src", "RoboRallyLogs");
 
         // log un tutulduğu klasör altındaki log dosyası
         Path pathFile = pathDirectory.resolve(logFileName);
@@ -123,7 +125,7 @@ public class LogManager implements LogService {
         // Klasör ve dosyanın var olup olmadığını kontrol et
         if (!Files.exists(pathDirectory) || !Files.isRegularFile(pathFile)) {
             // 404 Bulunamadı yanıtını veya özel bir hata mesajını döndür
-            String hataMesaji = "{'error': 'Dosya bulunamadı', 'folderName': '" + logFolderName + "', 'fileName': '" + logFileName + "'}";
+            String hataMesaji = "{'error': 'Dosya bulunamadı', 'file name': '" + logFileName + "'}";
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ByteArrayResource(hataMesaji.getBytes()));
         }
 
@@ -136,12 +138,64 @@ public class LogManager implements LogService {
 
         // Return the file as a response entity
         return ResponseEntity.ok()
-                .headers(headers)
+                // .headers(headers)
                 .contentLength(resource.contentLength())
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(resource);*/
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(resource);
 
-        return null;
+    }
+
+    @Override
+    public DataResult<List<String>> getLogFileNames() {
+
+        List<String> logFileNames = new ArrayList<>();
+
+        File logsDirectory = Paths.get("src", "RoboRallyLogs").toFile();
+        //klasör mevcut mu kontrol et
+        if (logsDirectory.exists() && logsDirectory.isDirectory()) {
+
+            //klasördeki tüm dosyaları al file dizisine ata
+            File[] files = logsDirectory.listFiles();
+
+            //dizi boş değilse
+            if (files != null) {
+                //dizideki tüm dosyaları tek tek gez , istenen isimde dosya mevcut mu kontrol et
+                for (File file : files) {
+                    logFileNames.add(file.getName());
+                }
+            } else {
+                return new ErrorDataResult<>("Log dosyası bulunamadı.");
+            }
+        } else {
+            return new ErrorDataResult<>("RoboRallyLogs klasörü bulunamadı.");
+        }
+
+
+        return new SuccessDataResult<>(logFileNames, "Log dosyaları listelendi.");
+    }
+
+    @Override
+    public void deleteLogFile(String fileName) {
+
+
+        File logsDirectory = Paths.get("src", "RoboRallyLogs").toFile();
+        //klasör mevcut mu kontrol et
+        if (logsDirectory.exists() && logsDirectory.isDirectory()) {
+
+            //klasördeki tüm dosyaları al file dizisine ata
+            File[] files = logsDirectory.listFiles();
+
+            //dizi boş değilse
+            if (files != null) {
+                //dizideki tüm dosyaları tek tek gez , istenen isimde dosya mevcut mu kontrol et
+                for (File file : files) {
+                    if (file.getName().equals(fileName)) {
+                        file.delete(); //dosya eşleşiyorsa sil
+                    }
+                }
+            }
+        }
+
     }
 
 
