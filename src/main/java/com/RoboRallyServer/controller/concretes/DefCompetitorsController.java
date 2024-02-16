@@ -53,9 +53,9 @@ public class DefCompetitorsController {
 
 
     @PostMapping(value = "/updateReadyByCode")
-    public Result updateReadyByCode( @RequestParam String code) {
+    public Result updateReadyByCode(@RequestParam("codes") String[] codes) {
 
-        return this.defCompetitorsService.updateReadyByCode(code);
+        return this.defCompetitorsService.updateReadyByCode(codes);
     }
 
     @PostMapping(value = "/updateStartByCode")
