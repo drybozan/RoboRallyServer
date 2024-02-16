@@ -28,14 +28,15 @@ import java.util.List;
 
 @Service
 public class LogManager implements LogService {
-
+    // Kullanıcı ev dizininin yolunu al
+    String userHome = System.getProperty("user.home");
 
     @Override
     public Result writeLog(LogEntity logEntity) {
 
 
         // oluşturacağın dizinin yolunu belirt
-        Path directory = Paths.get("src", "RoboRallyLogs");
+        Path directory = Paths.get(userHome, "RoboRallyLogs");
 
         // dizin oluştur veya varsa kontrol et
         Result directoryResult = createOrCheckDirectory(directory.toFile());
@@ -117,7 +118,7 @@ public class LogManager implements LogService {
     public ResponseEntity<Resource> getLogFileByName(String logFileName) throws IOException {
 
         // log un tutulduğu klasör yolu
-        Path pathDirectory = Paths.get("src", "RoboRallyLogs");
+        Path pathDirectory = Paths.get(userHome, "RoboRallyLogs");
 
         // log un tutulduğu klasör altındaki log dosyası
         Path pathFile = pathDirectory.resolve(logFileName);
@@ -150,7 +151,7 @@ public class LogManager implements LogService {
 
         List<String> logFileNames = new ArrayList<>();
 
-        File logsDirectory = Paths.get("src", "RoboRallyLogs").toFile();
+        File logsDirectory = Paths.get(userHome, "RoboRallyLogs").toFile();
         //klasör mevcut mu kontrol et
         if (logsDirectory.exists() && logsDirectory.isDirectory()) {
 
@@ -178,7 +179,7 @@ public class LogManager implements LogService {
     public void deleteLogFile(String fileName) {
 
 
-        File logsDirectory = Paths.get("src", "RoboRallyLogs").toFile();
+        File logsDirectory = Paths.get(userHome, "RoboRallyLogs").toFile();
         //klasör mevcut mu kontrol et
         if (logsDirectory.exists() && logsDirectory.isDirectory()) {
 

@@ -109,7 +109,16 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
         // bu id ye ait kayıt var mı
         if (this.defCompetitorsDao.existsById(newCompetitor.getId())) {
+
             DefCompetitors oldCompetitor = this.defCompetitorsDao.findById(newCompetitor.getId());
+
+            System.out.println(oldCompetitor.getName().equals(newCompetitor.getName()));
+            if(!oldCompetitor.getName().equals(newCompetitor.getName())){ // eger yarismaci ismi guncellendiyse eski log dosyasını sil
+
+                logService.deleteLogFile(oldCompetitor.getName()+".json");
+
+            }
+
             oldCompetitor.setCity(newCompetitor.getCity());
             oldCompetitor.setName(newCompetitor.getName());
             oldCompetitor.setEliminated(newCompetitor.isEliminated());
@@ -446,7 +455,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                         } else {
                             competitor.setDuration(duration);
                             DefCompetitors savedCompetitor = this.defCompetitorsDao.save(competitor);
-                            System.out.println("updatedCompetitor:" + savedCompetitor);
+                            //System.out.println("updatedCompetitor:" + savedCompetitor);
                         }
                     }
                 }
