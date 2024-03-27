@@ -2,6 +2,7 @@ package com.RoboRallyServer.controller.concretes;
 
 import com.RoboRallyServer.business.abstracts.DefCompetitorsService;
 import com.RoboRallyServer.entities.DefCompetitors;
+import com.RoboRallyServer.utilities.UDP.UDPClient;
 import com.RoboRallyServer.utilities.results.DataResult;
 import com.RoboRallyServer.utilities.results.Result;
 import lombok.RequiredArgsConstructor;
@@ -12,10 +13,16 @@ import java.util.List;
 @RestController
 @RequestMapping("/DefCompetitorsController")
 @CrossOrigin
-@RequiredArgsConstructor
 public class DefCompetitorsController {
 
-    private final DefCompetitorsService defCompetitorsService;
+    private  DefCompetitorsService defCompetitorsService;
+
+    private UDPClient udpClient;
+
+    public DefCompetitorsController(DefCompetitorsService defCompetitorsService, UDPClient udpClient) {
+        this.udpClient = udpClient;
+        this.defCompetitorsService = defCompetitorsService;
+    }
 
     @PostMapping(value = "/add")
     public Result add(@RequestBody DefCompetitors competitors) {
@@ -53,21 +60,27 @@ public class DefCompetitorsController {
 
 
     @PostMapping(value = "/updateReadyByCode")
-    public Result updateReadyByCode(@RequestParam("codes") String[] codes) {
+    public Result updateReadyByCode() {
 
-        return this.defCompetitorsService.updateReadyByCode(codes);
+        return this.defCompetitorsService.updateReadyByCode();
     }
 
     @PostMapping(value = "/updateStartByCode")
-    public Result updateStartByCode(@RequestParam("codes") String[] codes) {
+    public Result updateStartByCode() {
 
-        return this.defCompetitorsService.updateStartByCode(codes);
+        return this.defCompetitorsService.updateStartByCode();
     }
 
     @PostMapping(value = "/updateReadyAndStartByCode")
     public Result updateReadyAndStartByCode(@RequestParam("codes") String[] codes) {
 
         return this.defCompetitorsService.updateReadyAndStartByCode(codes);
+    }
+
+    @PostMapping(value = "/udpTest")
+    public void udpTest() {
+        // UDP mesajı gönderme
+        udpClient.sendMessage("selam canlarım !");
     }
 
 
