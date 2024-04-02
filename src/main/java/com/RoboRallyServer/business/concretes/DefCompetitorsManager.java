@@ -178,7 +178,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
     @Override
     public Result updateReadyByCode() {
 
-        this.udpClient.sendMessage("ready");
+ /*       this.udpClient.sendMessage("ready");
 
 
         String robotCode = this.udpServer.startUDPServer();
@@ -188,8 +188,8 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         // Yanıtı diziye atama
         if (robotCode != null && !robotCode.equals("connection active")) {
             codes = robotCode.split(",");
-        }
-
+        }*/
+        String[] codes = new String[4];
         for (String code : codes) {
             System.out.println("code " + code);
 
@@ -234,7 +234,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
     @Override
     public Result updateStartByCode() {
 
-        this.udpClient.sendMessage("start");
+   /*     this.udpClient.sendMessage("start");
 
 
         String robotCode = this.udpServer.startUDPServer();
@@ -244,8 +244,8 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         // Yanıtı diziye atama
         if (robotCode != null && !robotCode.equals("connection active")) {
             codes = robotCode.split(",");
-        }
-
+        }*/
+        String[] codes = new String[4];
         for (String code : codes) {
             System.out.println("code " + code);
 

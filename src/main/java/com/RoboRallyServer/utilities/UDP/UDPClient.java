@@ -20,7 +20,7 @@ public class UDPClient {
     @Value("${udp.client.port}")
     private int clientPort;
 
-    public void sendMessage(String message) {
+/*    public void sendMessage(String message) {
         try {
             DatagramSocket socket = new DatagramSocket();
             byte[] buffer = message.getBytes();
@@ -33,5 +33,5 @@ public class UDPClient {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
+    }*/
 }

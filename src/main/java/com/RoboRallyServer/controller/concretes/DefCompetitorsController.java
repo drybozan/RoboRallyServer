@@ -77,12 +77,12 @@ public class DefCompetitorsController {
         return this.defCompetitorsService.updateReadyAndStartByCode(codes);
     }
 
-    @PostMapping(value = "/udpTest")
+ /*   @PostMapping(value = "/udpTest")
     public void udpTest() {
         // UDP mesajı gönderme
         udpClient.sendMessage("selam canlarım !");
     }
-
+*/
 
 
 }
