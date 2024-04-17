@@ -178,7 +178,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
     @Override
     public Result updateReadyByCode() {
 
- /*       this.udpClient.sendMessage("ready");
+        this.udpClient.sendMessage("ready");
 
 
         String robotCode = this.udpServer.startUDPServer();
@@ -188,8 +188,8 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         // Yanıtı diziye atama
         if (robotCode != null && !robotCode.equals("connection active")) {
             codes = robotCode.split(",");
-        }*/
-        String[] codes = new String[4];
+        }
+        //String[] codes = new String[4];
         for (String code : codes) {
             System.out.println("code " + code);
 
@@ -234,7 +234,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
     @Override
     public Result updateStartByCode() {
 
-   /*     this.udpClient.sendMessage("start");
+        this.udpClient.sendMessage("start");
 
 
         String robotCode = this.udpServer.startUDPServer();
@@ -244,8 +244,8 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         // Yanıtı diziye atama
         if (robotCode != null && !robotCode.equals("connection active")) {
             codes = robotCode.split(",");
-        }*/
-        String[] codes = new String[4];
+        }
+        // String[] codes = new String[4];
         for (String code : codes) {
             System.out.println("code " + code);
 
@@ -374,30 +374,24 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
                         idMap.remove(defCompetitor.getId());
 
-
-                        DefCompetitors competitor = this.defCompetitorsDao.findById(defCompetitor.getId());
-
                         // Tarih bilgisini belirli formatta ayarla
                         String formattedDateTime = LocalDateTime.now().format(formatter);
 
-                        if (competitor != null) {
 
-                            competitor.setStopTime(formattedDateTime);
-                            competitor.setDuration(timer.stopTimer());
-                            competitor.setReady(false);
-                            competitor.setStart(false);
-                            DefCompetitors stoppedCompetitor = this.defCompetitorsDao.save(competitor);
-                            System.out.println("stoppedCompetitor : " + stoppedCompetitor);
+                        defCompetitor.setStopTime(formattedDateTime);
+                        defCompetitor.setDuration(timer.stopTimer());
+                        defCompetitor.setReady(false);
+                        defCompetitor.setStart(false);
+                        defCompetitor.setFinish(true);
+                        DefCompetitors stoppedCompetitor = this.defCompetitorsDao.save(defCompetitor);
 
-                            logEntity.setDate(formattedDateTime);
-                            logEntity.setMessage(stoppedCompetitor.getName() + " parkuru bitirdi.Sayaç durduruldu.Yarışmacı bilgileri : " + stoppedCompetitor);
-                            logEntity.setSender(stoppedCompetitor.getName());
-                            logEntity.setMessageType("INFO");
-                            logService.writeLog(logEntity);
+                        System.out.println("stoppedCompetitor : " + stoppedCompetitor);
 
-                        } else {
-                            System.out.println("Id bilgisine göre yarışmacı bulunamadı.");
-                        }
+                        logEntity.setDate(formattedDateTime);
+                        logEntity.setMessage(stoppedCompetitor.getName() + " parkuru bitirdi.Sayaç durduruldu.Yarışmacı bilgileri : " + stoppedCompetitor);
+                        logEntity.setSender(stoppedCompetitor.getName());
+                        logEntity.setMessageType("INFO");
+                        logService.writeLog(logEntity);
 
 
                         System.out.println(code + " koduna sahip yarışmacı için isStart güncellendi ve sayaç durduruldu.");

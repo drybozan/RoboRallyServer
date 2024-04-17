@@ -40,6 +40,9 @@ public class DefCompetitors {
     @Column(name = "bIsStart")
     private boolean isStart;
 
+    @Column(name = "bIsFinish")
+    private boolean isFinish;
+
     @Column(name = "sStartTime")
     private String startTime;
 

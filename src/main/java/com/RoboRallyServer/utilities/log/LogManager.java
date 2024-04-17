@@ -74,12 +74,12 @@ public class LogManager implements LogService {
     @Override
     public Result createOrCheckDirectory(File directory) {
         if (directory.exists()) {
-            System.out.println("Dizin mevcut.");
+           // System.out.println("Dizin mevcut.");
             return new Result(true, "Dizin mevcut.");
         } else {
             boolean isCreated = directory.mkdirs();
             if (isCreated) {
-                System.out.println("Dizin başarıyla oluşturuldu.");
+                //System.out.println("Dizin başarıyla oluşturuldu.");
                 return new Result(true, "Dizin başarıyla oluşturuldu.");
             } else {
                 System.out.println("Dizin oluşturulurken bir hata meydana geldi.");
@@ -93,13 +93,13 @@ public class LogManager implements LogService {
     @Override
     public Result createOrCheckFile(File file) {
         if (file.exists()) {
-            System.out.println("Dosya mevcut, sadece içine log yaz.");
+           // System.out.println("Dosya mevcut, sadece içine log yaz.");
             return new Result(true, "Dosya mevcut, sadece içine log yaz.");
         } else {
             try {
                 boolean isCreated = file.createNewFile();
                 if (isCreated) {
-                    System.out.println("Dosya başarıyla oluşturuldu.");
+                   // System.out.println("Dosya başarıyla oluşturuldu.");
                     return new Result(true, "Dosya başarıyla oluşturuldu.");
                 } else {
                     System.out.println("Dosya oluşturulurken bir hata meydana geldi.");

@@ -45,7 +45,7 @@ public class UDPServer {
 
         @Value("${udp.server.port}")
         private int serverPort;
-   /* @PostConstruct
+    @PostConstruct
         public String startUDPServer() {
 
             try {
@@ -66,6 +66,6 @@ public class UDPServer {
                 e.printStackTrace();
                 return null;
             }
-        }*/
+        }
 
 }
