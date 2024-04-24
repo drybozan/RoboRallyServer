@@ -17,9 +17,9 @@ public interface DefCompetitorsService {
     Result update(DefCompetitors competitors);
     DataResult<DefCompetitors> getById(int id);
 
-    Result updateReadyByCode();
-    Result updateStartByCode();
+    Result ready(String[] codes);
+    Result start(String[] codes);
 
-    Result updateReadyAndStartByCode(String[] codes);
+    Result finish(String[] codes);
 
 }

@@ -26,8 +26,6 @@ public class DefCompetitorsManager implements DefCompetitorsService {
     private final Timer timer = new Timer();
     private TimerTask timerTask; // TimerTask'i bir kere oluştur
 
-    // Integer tipinde ID'leri tutan bir Map
-    //Map<Integer, String> idMap = new HashMap<>();
     static Map<Integer, CompetitorTimer> idMap = new HashMap<>();
 
     // Tarih formatını belirle
@@ -176,9 +174,9 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
     //gönderilen kod bilgisne göre kullanıcı varsa ve elenmediyse ready bitini true yapar
     @Override
-    public Result updateReadyByCode() {
+    public Result ready(String[] codes) {
 
-        this.udpClient.sendMessage("ready");
+/*        this.udpClient.sendMessage("ready");
 
 
         String robotCode = this.udpServer.startUDPServer();
@@ -188,8 +186,8 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         // Yanıtı diziye atama
         if (robotCode != null && !robotCode.equals("connection active")) {
             codes = robotCode.split(",");
-        }
-        //String[] codes = new String[4];
+        }*/
+
         for (String code : codes) {
             System.out.println("code " + code);
 
@@ -224,17 +222,18 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                     }
 
                 }
+            } else {
+                System.out.println("ready için " + code + " koduna sahip yarışmacı bulunamadı.");
             }
-
         }
         return new SuccessResult("Yarışmacılar hazır.");
     }
 
 
     @Override
-    public Result updateStartByCode() {
+    public Result start(String[] codes) {
 
-        this.udpClient.sendMessage("start");
+   /*     this.udpClient.sendMessage("start");
 
 
         String robotCode = this.udpServer.startUDPServer();
@@ -244,8 +243,8 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         // Yanıtı diziye atama
         if (robotCode != null && !robotCode.equals("connection active")) {
             codes = robotCode.split(",");
-        }
-        // String[] codes = new String[4];
+        }*/
+
         for (String code : codes) {
             System.out.println("code " + code);
 
@@ -294,7 +293,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                         logService.writeLog(logEntity);
                     }
                 } else {
-                    System.out.println(code + " koduna sahip yarışmacı bulunamadı.");
+                    System.out.println("start için "+ code + " koduna sahip yarışmacı bulunamadı.");
                 }
             }
 
@@ -352,7 +351,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
     // gönderilen kod bilgisine göre eğer yarışmacı elenmemişse, hazır ve başlamışsa bunları false a çeker ve timerı durdurur
     @Override
-    public Result updateReadyAndStartByCode(String[] codes) {
+    public Result finish(String[] codes) {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss:SSS");
 
@@ -466,7 +465,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                         String duration = timer.printElapsedTime();
                         //System.out.println("update duration Id:" + id + " duration:" + duration);
 
-                        if (duration.equals("01:00:00") || duration.compareTo("01:00:00") > 0) {
+                        if (duration.equals("05:00:00") || duration.compareTo("05:00:00") > 0) {
                             competitor.setEliminated(true);
                             competitor.setReady(false);
                             competitor.setStart(false);

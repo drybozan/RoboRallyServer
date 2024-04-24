@@ -11,9 +11,10 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 // UDP Sunucusu (Mesaj Alıcı)
+
 @Component
 public class UDPClient {
-
+/*
     @Value("${udp.client.ip}")
     private String clientIP;
 
@@ -34,4 +35,7 @@ public class UDPClient {
             e.printStackTrace();
         }
     }
+    
+ */
 }
+

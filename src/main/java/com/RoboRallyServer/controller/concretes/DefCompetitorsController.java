@@ -5,6 +5,7 @@ import com.RoboRallyServer.entities.DefCompetitors;
 import com.RoboRallyServer.utilities.UDP.UDPClient;
 import com.RoboRallyServer.utilities.results.DataResult;
 import com.RoboRallyServer.utilities.results.Result;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -59,22 +60,22 @@ public class DefCompetitorsController {
     }
 
 
-    @PostMapping(value = "/updateReadyByCode")
-    public Result updateReadyByCode() {
+    @PostMapping(value = "/ready")
+    public Result ready(@Nullable @RequestParam("codes") String[] codes) {
 
-        return this.defCompetitorsService.updateReadyByCode();
+        return this.defCompetitorsService.ready(codes);
     }
 
-    @PostMapping(value = "/updateStartByCode")
-    public Result updateStartByCode() {
+    @PostMapping(value = "/start")
+    public Result start(@Nullable @RequestParam("codes") String[] codes) {
 
-        return this.defCompetitorsService.updateStartByCode();
+        return this.defCompetitorsService.start(codes);
     }
 
-    @PostMapping(value = "/updateReadyAndStartByCode")
-    public Result updateReadyAndStartByCode(@RequestParam("codes") String[] codes) {
+    @PostMapping(value = "/finish")
+    public Result finish(@Nullable @RequestParam("codes") String[] codes) {
 
-        return this.defCompetitorsService.updateReadyAndStartByCode(codes);
+        return this.defCompetitorsService.finish(codes);
     }
 
  /*   @PostMapping(value = "/udpTest")
