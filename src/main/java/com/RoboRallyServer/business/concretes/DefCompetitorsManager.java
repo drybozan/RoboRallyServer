@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -78,13 +79,64 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
     @Override
     public DataResult<List<DefCompetitors>> getAllCompetitorsByDuration() {
+
         try {
 
-            List<DefCompetitors> competitors = this.defCompetitorsDao.getAllCompetitorsByDuration();
+            List<DefCompetitors>  competitors = this.defCompetitorsDao.getAllCompetitorsByDuration();
+
+/*            if(!idMap.isEmpty()){
+                System.out.println("timer var listeden çekiliyor ...");
+
+                // Timer değerlerini güncelle ve kullanıcıları listeye ekle
+                for (DefCompetitors competitor : competitors) {
+                    Integer id = competitor.getId();
+                    CompetitorTimer timer = idMap.get(id);
+                    if (timer != null) {
+                        // Timer değerini güncelle
+                        competitor.setDuration(timer.printElapsedTime());
+                    }
+                }
+
+                // Özelleştirilmiş sıralama
+                Collections.sort(competitors, new Comparator<DefCompetitors>() {
+                    @Override
+                    public int compare(DefCompetitors c1, DefCompetitors c2) {
+                        // Elenmiş olanlar en sonda
+                        if (c1.isEliminated() && !c2.isEliminated()) {
+                            return 1;
+                        } else if (!c1.isEliminated() && c2.isEliminated()) {
+                            return -1;
+                        }
+                        // Timer değeri olanlar en üstte
+                        if (idMap.containsKey(c1.getId()) && !idMap.containsKey(c2.getId())) {
+                            return -1;
+                        } else if (!idMap.containsKey(c1.getId()) && idMap.containsKey(c2.getId())) {
+                            return 1;
+                        }
+
+                        // Duration değeri 00:00:000 olanlar en altta
+                        if (c1.getDuration().equals("00:00:000") && !c2.getDuration().equals("00:00:000")) {
+                            return 1;
+                        } else if (!c1.getDuration().equals("00:00:000") && c2.getDuration().equals("00:00:000")) {
+                            return -1;
+                        }
+                        // Timer değerlerine göre sıralama
+                        return c1.getDuration().compareTo(c2.getDuration());
+                    }
+                });
+
+                // Sıralanmış kullanıcı listesi
+                for (DefCompetitors competitor : competitors) {
+                    System.out.println(competitor.getName() + " - " + competitor.getDuration());
+                }
+
+            }*/
 
             return new SuccessDataResult<>(competitors, "Yarışmacılar duration bilgisine göre listelendi.");
 
         } catch (Exception e) {
+            System.out.println("error: ... ");
+            System.out.println(e);
             return new ErrorDataResult<>("Yarışmacılar listelenirken bir hata oluştu.");
         }
     }
@@ -421,7 +473,6 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         return new SuccessResult("Sayaçlar durduruldu.");
 
     }
-
 
     public void startTimer() {
         //saniyede bir çalışan görev başlat
