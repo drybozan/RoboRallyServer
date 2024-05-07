@@ -14,28 +14,28 @@ import java.net.InetAddress;
 
 @Component
 public class UDPClient {
-/*
-    @Value("${udp.client.ip}")
-    private String clientIP;
 
-    @Value("${udp.client.port}")
+   @Value("${udp.client.port}")
     private int clientPort;
 
     public void sendMessage(String message) {
+        // 8 farklı IP adresini bir diziye yerleştirin
+        String[] ips = {"10.200.4.101"};
+
         try {
-            DatagramSocket socket = new DatagramSocket();
-            byte[] buffer = message.getBytes();
-            InetAddress address = InetAddress.getByName(clientIP);
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, clientPort);
-            System.out.println("packet : " + packet);
-            socket.send(packet);
-            socket.close();
-            System.out.println("mesaj gönderildi.");
+            for (String ip : ips) {
+                DatagramSocket socket = new DatagramSocket();
+                byte[] buffer = message.getBytes();
+                InetAddress address = InetAddress.getByName(ip);
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, clientPort);
+                System.out.println("packet : " + packet);
+                socket.send(packet);
+                socket.close();
+            }
+            System.out.println("Mesaj istasyonalara gönderildi.");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    
- */
 }
 

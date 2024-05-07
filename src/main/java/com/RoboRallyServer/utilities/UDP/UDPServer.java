@@ -14,8 +14,8 @@ import java.util.concurrent.atomic.AtomicReference;
 @Component
 public class UDPServer {
 
-/*
-    @Value("${udp.server.port}")
+
+   @Value("${udp.server.port}")
     private int serverPort;
 
     @PostConstruct
@@ -39,7 +39,9 @@ public class UDPServer {
             e.printStackTrace();
             return null;
         }
- */
+
 
     }
+
+}
 
