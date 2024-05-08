@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 // UDP Sunucusu (Mesaj Alıcı)
 
+
 @Component
 public class UDPServer {
 
@@ -21,7 +22,7 @@ public class UDPServer {
     @PostConstruct
     public String startUDPServer() {
 
-        try {
+      try {
             DatagramSocket socket = new DatagramSocket(serverPort);
             byte[] buffer = new byte[1024];
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
@@ -43,5 +44,9 @@ public class UDPServer {
 
     }
 
+
+
 }
+
+
 

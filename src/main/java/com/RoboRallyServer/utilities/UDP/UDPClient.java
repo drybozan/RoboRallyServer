@@ -19,8 +19,8 @@ public class UDPClient {
     private int clientPort;
 
     public void sendMessage(String message) {
-        // 8 farklı IP adresini bir diziye yerleştirin
         String[] ips = {"10.200.4.101"};
+       // String[] ips = {"192.168.1.21"};
 
         try {
             for (String ip : ips) {
@@ -28,11 +28,10 @@ public class UDPClient {
                 byte[] buffer = message.getBytes();
                 InetAddress address = InetAddress.getByName(ip);
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, clientPort);
-                System.out.println("packet : " + packet);
                 socket.send(packet);
                 socket.close();
             }
-            System.out.println("Mesaj istasyonalara gönderildi.");
+            //System.out.println("Mesaj istasyonalara gönderildi.");
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -170,7 +170,6 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
             DefCompetitors oldCompetitor = this.defCompetitorsDao.findById(newCompetitor.getId());
 
-            System.out.println(oldCompetitor.getName().equals(newCompetitor.getName()));
             if (!oldCompetitor.getName().equals(newCompetitor.getName())) { // eger yarismaci ismi guncellendiyse eski log dosyasını sil
 
                 logService.deleteLogFile(oldCompetitor.getName() + ".json");
@@ -187,6 +186,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                 idMap.remove(newCompetitor.getId());
                 oldCompetitor.setReady(false);
                 oldCompetitor.setStart(false);
+                oldCompetitor.setFinish(false);
 
 
                 logEntity.setDate(LocalDateTime.now().format(formatter));
@@ -229,15 +229,16 @@ public class DefCompetitorsManager implements DefCompetitorsService {
     @Override
     public Result ready(List<String>  codes) throws InterruptedException {
 
-       for (int i = 0 ; i < 4 ; i++) {
+        //for (int i = 0 ; i < 10 ; i++) {
+        codes = new ArrayList<>();
+
+        while (true) {
 
             this.udpClient.sendMessage("id: 00  cmd: 11  stat: 00");
-
-            // 3 saniye bekle cevap alabilmek için
-            Thread.sleep(3000);
+            //Thread.sleep(1000);
             String message = this.udpServer.startUDPServer();
 
-            System.out.println("STM den alınan mesaj : ");
+            System.out.println("[Ready] ,STM den alınan mesaj : " + message);
             System.out.println(message);
 
             if (message.contains("id")) {
@@ -255,10 +256,23 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
                 // cmd--> 11 ready , stat 01 --> OK, id --00'dan farklı ve daha once codes listesinde yoksa ekle
                 if (!idRobot.equals("00") && cmd.equals("11") && stat.contains("01") && !codes.contains(idRobot)) {
+                    System.out.println("idRobot : " + idRobot);
                     codes.add(idRobot);
                 }
+
+                //System.out.println("codes.size() : " + codes.size());
+
+                for (String code : codes) {
+                    System.out.println("codes dizinin içi" + code);
+                }
+                if(codes.size() == 1)
+                    break;
             }
+            // sinyal gondermek ve almak icin 2 saniye bekle
+            Thread.sleep(2000);
+
         }
+
 
         for (String code : codes) {
             System.out.println("code " + code);
@@ -303,22 +317,25 @@ public class DefCompetitorsManager implements DefCompetitorsService {
     @Override
     public Result start(List<String>  codes) throws InterruptedException {
 
+        codes = new ArrayList<>();
+
        List<String> readyCodes = this.defCompetitorsDao.getReadyCompetiors();
 
-        // start olan kodlara 12 sinyalini gonder gonder
-        for (String code : readyCodes) {
-            this.udpClient.sendMessage("id: " + code + "  cmd: 12  stat: 00");
-        }
 
+       // for (int i = 0 ; i < 10 ; i++) {
 
-        for (int i = 0 ; i < 4 ; i++) {
+        while(true){
+
+            // start olan kodlara 12 sinyalini gonder gonder
+            for (String code : readyCodes) {
+                this.udpClient.sendMessage("id: " + code + "  cmd: 12  stat: 00");
+            }
 
             // 3 saniye bekle cevap alabilmek için
-            Thread.sleep(3000);
+            //Thread.sleep(3000);
             String message = this.udpServer.startUDPServer();
 
-            System.out.println("STM den alınan mesaj : ");
-            System.out.println(message);
+            System.out.println("[Start], STM den alınan mesaj : " + message);
 
             if (message.contains("id")) {
                 // Mesajı ":" ile parçala ve boşlukları temizle
@@ -329,17 +346,21 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                 String cmd = parts[1].split(":")[1].trim();
                 String stat = parts[2].split(":")[1].trim();
 
-                System.out.println("id: " + idRobot);
+                System.out.println("start id: " + idRobot);
                 System.out.println("cmd: " + cmd);
                 System.out.println("stat: " + stat);
 
-                // cmd--> 12 ready , stat 01 --> OK, id --00'dan farklı ve daha once codes listesinde yoksa ekle
+                // cmd--> 12 start , stat 01 --> OK, id --00'dan farklı ve daha once codes listesinde yoksa ekle
                 if (!idRobot.equals("00") && cmd.equals("12") && stat.contains("01") && !codes.contains(idRobot)) {
                     codes.add(idRobot);
                 }
-            }
-        }
 
+                if(codes.size() == 1)
+                    break;
+            }
+            // sinyal gondermek ve almak icin 2 saniye bekle
+            Thread.sleep(2000);
+        }
 
         for (String code : codes) {
             System.out.println("code " + code);
@@ -446,6 +467,8 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
             String message = this.udpServer.startUDPServer();
 
+            System.out.println("[Finish], STM den alınan mesaj :  " + message);
+
             if (message.contains("id")) {
                 // Mesajı ":" ile parçala ve boşlukları temizle
                 String[] parts = message.split("\\s+");
@@ -460,11 +483,18 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                 System.out.println("stat: " + stat);
 
                 // cmd--> 13 ready , stat 01 --> OK, id --00'dan farklı ve daha once codes listesinde yoksa ekle
-                if (!idRobot.equals("00") && cmd.equals("13") && stat.contains("01") ) {
+                if (!idRobot.equals("00") && cmd.equals("13") && stat.contains("00") ) {
                     finish(idRobot.lines().toList());
                     this.udpClient.sendMessage("id: " + idRobot + "  cmd: 13  stat: 01"); // finish olduğuna dair ack biti gonder
                 }
+
             }
+
+            if(idMap.isEmpty()){
+                System.out.println("[Finish] yarısan robot kalmadı. Port dinleme bitti. ");
+                break;
+            }
+
         }
     }
 
@@ -559,7 +589,8 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                     }
                 }
             };
-            timer.scheduleAtFixedRate(timerTask, 0, 1);
+            //timer.scheduleAtFixedRate(timerTask, 0, 1); // 1 ms
+            timer.scheduleAtFixedRate(timerTask, 0, 10); //10 ms
         }
     }
 
