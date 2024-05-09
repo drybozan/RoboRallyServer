@@ -235,13 +235,13 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         while (true) {
 
             this.udpClient.sendMessage("id: 00  cmd: 11  stat: 00");
-            //Thread.sleep(1000);
+
             String message = this.udpServer.startUDPServer();
 
             System.out.println("[Ready] ,STM den alınan mesaj : " + message);
             System.out.println(message);
 
-            if (message.contains("id")) {
+            if (message != null && message.contains("id")) {
                 // Mesajı ":" ile parçala ve boşlukları temizle
                 String[] parts = message.split("\\s+");
 
@@ -256,7 +256,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
                 // cmd--> 11 ready , stat 01 --> OK, id --00'dan farklı ve daha once codes listesinde yoksa ekle
                 if (!idRobot.equals("00") && cmd.equals("11") && stat.contains("01") && !codes.contains(idRobot)) {
-                    System.out.println("idRobot : " + idRobot);
+                    //System.out.println("idRobot : " + idRobot);
                     codes.add(idRobot);
                 }
 
@@ -331,9 +331,9 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                 this.udpClient.sendMessage("id: " + code + "  cmd: 12  stat: 00");
             }
 
-            // 3 saniye bekle cevap alabilmek için
-            //Thread.sleep(3000);
+
             String message = this.udpServer.startUDPServer();
+
 
             System.out.println("[Start], STM den alınan mesaj : " + message);
 

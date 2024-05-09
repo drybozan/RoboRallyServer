@@ -10,7 +10,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 
-// UDP Sunucusu (Mesaj Alıcı)
+// UDP Client  (Mesaj Gönderici)
 
 @Component
 public class UDPClient {
@@ -19,8 +19,8 @@ public class UDPClient {
     private int clientPort;
 
     public void sendMessage(String message) {
-        String[] ips = {"10.200.4.101"};
-       // String[] ips = {"192.168.1.21"};
+       //String[] ips = {"10.200.4.101"};
+        String[] ips = {"192.168.1.24","192.168.1.23"};
 
         try {
             for (String ip : ips) {
