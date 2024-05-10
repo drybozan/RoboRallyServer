@@ -20,7 +20,7 @@ public class UDPClient {
 
     public void sendMessage(String message) {
        //String[] ips = {"10.200.4.101"};
-        String[] ips = {"192.168.1.24","192.168.1.23"};
+        String[] ips = {"192.168.1.23","192.168.1.24","192.168.1.25","192.168.1.26"};
 
         try {
             for (String ip : ips) {

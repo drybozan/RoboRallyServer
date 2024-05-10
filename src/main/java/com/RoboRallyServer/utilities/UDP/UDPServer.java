@@ -17,8 +17,7 @@ public class UDPServer {
 
     @Value("${udp.server.port}")
     private int serverPort;
-/*    @Getter
-    static String  message ;*/
+
 
     @PostConstruct
     public String startUDPServer() {
@@ -43,30 +42,7 @@ public class UDPServer {
             return null;
         }
     }
-/*
-    @PostConstruct
-    public String startUDPServer() {
 
-        new Thread(() -> {
-            try {
-                DatagramSocket socket = new DatagramSocket(serverPort);
-                byte[] buffer = new byte[1024];
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-
-                // Soket'ten bir mesaj al
-                socket.receive(packet);
-                message = new String(packet.getData(), 0, packet.getLength());
-                System.out.println("received message from UDPServer: " + message);
-                // Socket'i kapat
-                socket.close();
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }).start();
-        return message;
-
-    }*/
 
 
 }

@@ -18,8 +18,13 @@ public interface DefCompetitorsDao extends JpaRepository<DefCompetitors, Integer
     * süre uzunluğuna göre küçükten büyüğe sıralar, ardından elimine edilmiş kayıtları (bEliminated = true) en altta tutar.
     */
 
-    //@Query(value = "SELECT * FROM RoboRallyDB.DefCompetitors ORDER BY  CASE  WHEN bEliminated = false  THEN 0  ELSE 1    END,  LENGTH(sDuration),   sDuration ASC;", nativeQuery = true)
-    @Query(value = "SELECT * FROM RoboRallyDB.DefCompetitors ORDER BY  CASE  WHEN bEliminated = false THEN 0  ELSE 1  END, CASE   WHEN sDuration = '00:00:000' THEN 1 ELSE 0  END,LENGTH(sDuration),sDuration ASC;", nativeQuery = true)
+    @Query(value = "SELECT * FROM RoboRallyDB.DefCompetitors \n" +
+            "WHERE bIsdelete = 0 ORDER BY  \n" +
+            "CASE  WHEN bEliminated = false \n" +
+            "THEN 0  ELSE 1  END, \n" +
+            "CASE   WHEN sDuration = '00:00:000' \n" +
+            "THEN 1 ELSE 0  END,\n" +
+            "LENGTH(sDuration),sDuration ASC;", nativeQuery = true)
     List<DefCompetitors> getAllCompetitorsByDuration();
 
     @Query(value = "SELECT * FROM RoboRallyDB.DefCompetitors ;", nativeQuery = true)

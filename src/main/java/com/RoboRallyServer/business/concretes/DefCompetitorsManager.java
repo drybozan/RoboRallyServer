@@ -40,6 +40,8 @@ public class DefCompetitorsManager implements DefCompetitorsService {
     @Autowired
     private UDPServer udpServer;
 
+    int robotCount = 2;
+
 
 
 
@@ -86,53 +88,6 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
             List<DefCompetitors> competitors = this.defCompetitorsDao.getAllCompetitorsByDuration();
 
-/*            if(!idMap.isEmpty()){
-                System.out.println("timer var listeden çekiliyor ...");
-
-                // Timer değerlerini güncelle ve kullanıcıları listeye ekle
-                for (DefCompetitors competitor : competitors) {
-                    Integer id = competitor.getId();
-                    CompetitorTimer timer = idMap.get(id);
-                    if (timer != null) {
-                        // Timer değerini güncelle
-                        competitor.setDuration(timer.printElapsedTime());
-                    }
-                }
-
-                // Özelleştirilmiş sıralama
-                Collections.sort(competitors, new Comparator<DefCompetitors>() {
-                    @Override
-                    public int compare(DefCompetitors c1, DefCompetitors c2) {
-                        // Elenmiş olanlar en sonda
-                        if (c1.isEliminated() && !c2.isEliminated()) {
-                            return 1;
-                        } else if (!c1.isEliminated() && c2.isEliminated()) {
-                            return -1;
-                        }
-                        // Timer değeri olanlar en üstte
-                        if (idMap.containsKey(c1.getId()) && !idMap.containsKey(c2.getId())) {
-                            return -1;
-                        } else if (!idMap.containsKey(c1.getId()) && idMap.containsKey(c2.getId())) {
-                            return 1;
-                        }
-
-                        // Duration değeri 00:00:000 olanlar en altta
-                        if (c1.getDuration().equals("00:00:000") && !c2.getDuration().equals("00:00:000")) {
-                            return 1;
-                        } else if (!c1.getDuration().equals("00:00:000") && c2.getDuration().equals("00:00:000")) {
-                            return -1;
-                        }
-                        // Timer değerlerine göre sıralama
-                        return c1.getDuration().compareTo(c2.getDuration());
-                    }
-                });
-
-                // Sıralanmış kullanıcı listesi
-                for (DefCompetitors competitor : competitors) {
-                    System.out.println(competitor.getName() + " - " + competitor.getDuration());
-                }
-
-            }*/
 
             return new SuccessDataResult<>(competitors, "Yarışmacılar duration bilgisine göre listelendi.");
 
@@ -149,9 +104,13 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         // bu id ye ait kayıt var mı
         if (this.defCompetitorsDao.existsById(id)) {
 
-            logService.deleteLogFile(this.defCompetitorsDao.findById(id).getName() + ".json"); //log dosyasını sil
+           // logService.deleteLogFile(this.defCompetitorsDao.findById(id).getName() + ".json"); //log dosyasını sil
 
-            this.defCompetitorsDao.deleteById(id);
+           // this.defCompetitorsDao.deleteById(id);
+            DefCompetitors competitors = this.defCompetitorsDao.findById(id);
+            competitors.setDelete(true);
+            this.defCompetitorsDao.save(competitors);
+
             // sayacını kaldır
             idMap.remove(id);
 
@@ -256,16 +215,13 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
                 // cmd--> 11 ready , stat 01 --> OK, id --00'dan farklı ve daha once codes listesinde yoksa ekle
                 if (!idRobot.equals("00") && cmd.equals("11") && stat.contains("01") && !codes.contains(idRobot)) {
-                    //System.out.println("idRobot : " + idRobot);
+
                     codes.add(idRobot);
                 }
 
                 //System.out.println("codes.size() : " + codes.size());
 
-                for (String code : codes) {
-                    System.out.println("codes dizinin içi" + code);
-                }
-                if(codes.size() == 1)
+                if(codes.size() == robotCount)
                     break;
             }
             // sinyal gondermek ve almak icin 2 saniye bekle
@@ -355,7 +311,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                     codes.add(idRobot);
                 }
 
-                if(codes.size() == 1)
+                if(codes.size() == robotCount)
                     break;
             }
             // sinyal gondermek ve almak icin 2 saniye bekle

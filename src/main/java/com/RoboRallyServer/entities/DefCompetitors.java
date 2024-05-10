@@ -55,5 +55,8 @@ public class DefCompetitors {
     @Column(name = "bEliminated")
     private boolean eliminated;
 
+    @Column(name = "bIsdelete")
+    private boolean isDelete;
+
 
 }
