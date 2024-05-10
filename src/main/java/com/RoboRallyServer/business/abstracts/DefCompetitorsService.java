@@ -17,9 +17,9 @@ public interface DefCompetitorsService {
     Result update(DefCompetitors competitors);
     DataResult<DefCompetitors> getById(int id);
 
-    Result ready(List<String>  codes)throws InterruptedException ;
-    Result start(List<String>  codes) throws InterruptedException;
+    Result ready()throws InterruptedException ;
+    Result start() throws InterruptedException;
 
-    Result finish(List<String>  codes);
+    Result finish(String  code);
 
 }

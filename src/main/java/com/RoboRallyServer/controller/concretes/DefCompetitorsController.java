@@ -63,19 +63,19 @@ public class DefCompetitorsController {
     @PostMapping(value = "/ready")
     public Result ready(@Nullable @RequestParam("codes") List<String>  codes)throws InterruptedException  {
 
-        return this.defCompetitorsService.ready(codes);
+        return this.defCompetitorsService.ready();
     }
 
     @PostMapping(value = "/start")
     public Result start(@Nullable @RequestParam("codes") List<String>  codes)throws InterruptedException {
 
-        return this.defCompetitorsService.start(codes);
+        return this.defCompetitorsService.start();
     }
 
     @PostMapping(value = "/finish")
-    public Result finish(@Nullable @RequestParam("codes") List<String>  codes) {
+    public Result finish(@Nullable @RequestParam("codes") String  code) {
 
-        return this.defCompetitorsService.finish(codes);
+        return this.defCompetitorsService.finish(code);
     }
 
  /*   @PostMapping(value = "/udpTest")

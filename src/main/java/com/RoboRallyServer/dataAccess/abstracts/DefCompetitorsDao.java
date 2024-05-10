@@ -36,8 +36,8 @@ public interface DefCompetitorsDao extends JpaRepository<DefCompetitors, Integer
 
     DefCompetitors findByCode(String code);
 
-    @Query(value = "SELECT sCode FROM RoboRallyDB.DefCompetitors where bIsReady = 1", nativeQuery = true)
-    List<String> getReadyCompetiors();
+    @Query(value = "SELECT * FROM RoboRallyDB.DefCompetitors where bIsReady = 1", nativeQuery = true)
+    List<DefCompetitors> getReadyCompetiors();
 
 
 }

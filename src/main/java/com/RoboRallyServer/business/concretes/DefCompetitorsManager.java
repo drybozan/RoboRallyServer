@@ -10,6 +10,7 @@ import com.RoboRallyServer.utilities.log.LogService;
 import com.RoboRallyServer.utilities.results.*;
 import com.RoboRallyServer.utilities.timer.CompetitorTimer;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DefCompetitorsManager implements DefCompetitorsService {
 
     private final DefCompetitorsDao defCompetitorsDao;
@@ -41,9 +43,8 @@ public class DefCompetitorsManager implements DefCompetitorsService {
     private UDPServer udpServer;
 
     int robotCount = 2;
-
-
-
+    List<String> robotCodes = new ArrayList<>();
+    List<Integer> robotCodePort = new ArrayList<>();
 
     @Override
     public Result add(DefCompetitors competitors) {
@@ -92,8 +93,8 @@ public class DefCompetitorsManager implements DefCompetitorsService {
             return new SuccessDataResult<>(competitors, "Yarışmacılar duration bilgisine göre listelendi.");
 
         } catch (Exception e) {
-            System.out.println("error: ... ");
-            System.out.println(e);
+            log.info("error: ... ");
+            log.info("",e);
             return new ErrorDataResult<>("Yarışmacılar listelenirken bir hata oluştu.");
         }
     }
@@ -104,9 +105,9 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         // bu id ye ait kayıt var mı
         if (this.defCompetitorsDao.existsById(id)) {
 
-           // logService.deleteLogFile(this.defCompetitorsDao.findById(id).getName() + ".json"); //log dosyasını sil
+            // logService.deleteLogFile(this.defCompetitorsDao.findById(id).getName() + ".json"); //log dosyasını sil
 
-           // this.defCompetitorsDao.deleteById(id);
+            // this.defCompetitorsDao.deleteById(id);
             DefCompetitors competitors = this.defCompetitorsDao.findById(id);
             competitors.setDelete(true);
             this.defCompetitorsDao.save(competitors);
@@ -186,140 +187,159 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
     //gönderilen kod bilgisne göre kullanıcı varsa ve elenmediyse ready bitini true yapar
     @Override
-    public Result ready(List<String>  codes) throws InterruptedException {
+    public Result ready() throws InterruptedException {
 
-        //for (int i = 0 ; i < 10 ; i++) {
-        codes = new ArrayList<>();
+        robotCodes = new ArrayList<>(); // mevcut aldıgım robot kodları burada haberlesirken
+        robotCodePort = new ArrayList<>(); // haberlesme yaptıgım portları burda tutuyorum
+        List<Integer> port = new ArrayList<>(); // haberlesmem gereken portlar burda
+        port.add(6000);
+        port.add(6002);
+   //     port.add(6003);
 
         while (true) {
 
             this.udpClient.sendMessage("id: 00  cmd: 11  stat: 00");
 
-            String message = this.udpServer.startUDPServer();
 
-            System.out.println("[Ready] ,STM den alınan mesaj : " + message);
-            System.out.println(message);
-
-            if (message != null && message.contains("id")) {
-                // Mesajı ":" ile parçala ve boşlukları temizle
-                String[] parts = message.split("\\s+");
-
-                // id, cmd ve stat alanlarını ayır
-                String idRobot = parts[0].split(":")[1].trim();
-                String cmd = parts[1].split(":")[1].trim();
-                String stat = parts[2].split(":")[1].trim();
-
-                System.out.println("id: " + idRobot);
-                System.out.println("cmd: " + cmd);
-                System.out.println("stat: " + stat);
-
-                // cmd--> 11 ready , stat 01 --> OK, id --00'dan farklı ve daha once codes listesinde yoksa ekle
-                if (!idRobot.equals("00") && cmd.equals("11") && stat.contains("01") && !codes.contains(idRobot)) {
-
-                    codes.add(idRobot);
+            port.parallelStream().forEach(s-> {
+               if( robotCodePort.contains(s)) {
+                   log.info("[READY] port already returned data: " + s);
+                    return;
                 }
 
-                //System.out.println("codes.size() : " + codes.size());
+                String fromPort1 = udpServer.startServer(s);
+                log.info("[Ready] ,STM den alınan mesaj port " + s + " " + fromPort1);
 
-                if(codes.size() == robotCount)
-                    break;
+                if (fromPort1 != null && fromPort1.contains("id") ) {
+
+                    // Mesajı ":" ile parçala ve boşlukları temizle
+                    String[] parts = fromPort1.split("\\s+");
+
+                    // id, cmd ve stat alanlarını ayır
+                    String idRobot = parts[0].split(":")[1].trim();
+                    String cmd = parts[1].split(":")[1].trim();
+                    String stat = parts[2].split(":")[1].trim();
+
+                    
+                    
+                    log.info("id: " + idRobot);
+                    log.info("cmd: " + cmd);
+                    log.info("stat: " + stat);
+
+                    // cmd--> 11 ready , stat 01 --> OK, id --00'dan farklı ve daha once codes listesinde yoksa ekle
+                    if ((!idRobot.equals("00") && cmd.equals("11") && stat.contains("01") && !robotCodes.contains(idRobot))) {
+
+                        log.info("**ROBOT READY : " + idRobot);
+                        robotCodes.add(idRobot);
+                        robotCodePort.add(s);
+
+                        DefCompetitors defCompetitor = this.defCompetitorsDao.findByCode(idRobot);
+
+                        if (defCompetitor != null  ) {
+
+                            log.info("ready kodu gönderenler :" + defCompetitor.getName());
+
+                            if (!defCompetitor.isEliminated()) {
+                                defCompetitor.setReady(true);
+                                defCompetitor.setSPort(s.toString());
+                                defCompetitor.setSPort(s.toString());
+                                this.defCompetitorsDao.save(defCompetitor);
+
+                                logEntity.setDate(LocalDateTime.now().format(formatter));
+                                logEntity.setMessage(defCompetitor.getName() + " ready komutunu gönderdi.Kod :  " + idRobot + " Yarışmacı Bilgileri : " + defCompetitor);
+                                logEntity.setSender(defCompetitor.getName());
+                                logEntity.setMessageType("INFO");
+
+                                logService.writeLog(logEntity);
+
+
+                            } else {
+                                logEntity.setDate(LocalDateTime.now().format(formatter));
+                                logEntity.setMessage(defCompetitor.getName() + " ready komutu gönderdi ama elenmiş durumda. Kod :  " + idRobot + " Yarışmacı Bilgileri : " + defCompetitor);
+                                logEntity.setSender(defCompetitor.getName());
+                                logEntity.setMessageType("ERROR");
+
+                                logService.writeLog(logEntity);
+
+                            }
+
+                        }
+                    }
+                }
+
+            });
+            if(robotCodes.size() == robotCount){
+                break;
             }
             // sinyal gondermek ve almak icin 2 saniye bekle
-            Thread.sleep(2000);
+           // Thread.sleep(2000);
 
-        }
-
-
-        for (String code : codes) {
-            System.out.println("code " + code);
-
-            if (code != null) {
-
-                DefCompetitors defCompetitor = this.defCompetitorsDao.findByCode(code);
-
-                if (defCompetitor != null) {
-
-                    System.out.println("ready kodu gönderenler :" + defCompetitor.getName());
-
-                    if (!defCompetitor.isEliminated()) {
-                        defCompetitor.setReady(true);
-                        this.defCompetitorsDao.save(defCompetitor);
-
-                        logEntity.setDate(LocalDateTime.now().format(formatter));
-                        logEntity.setMessage(defCompetitor.getName() + " ready komutunu gönderdi.Kod :  " + code + " Yarışmacı Bilgileri : " + defCompetitor);
-                        logEntity.setSender(defCompetitor.getName());
-                        logEntity.setMessageType("INFO");
-
-                        logService.writeLog(logEntity);
-
-
-                    } else {
-                        logEntity.setDate(LocalDateTime.now().format(formatter));
-                        logEntity.setMessage(defCompetitor.getName() + " ready komutu gönderdi ama elenmiş durumda. Kod :  " + code + " Yarışmacı Bilgileri : " + defCompetitor);
-                        logEntity.setSender(defCompetitor.getName());
-                        logEntity.setMessageType("ERROR");
-
-                        logService.writeLog(logEntity);
-
-                    }
-
-                }
-            }
         }
         return new SuccessResult("Yarışmacılar hazır.");
     }
 
 
     @Override
-    public Result start(List<String>  codes) throws InterruptedException {
+    public Result start() throws InterruptedException {
 
-        codes = new ArrayList<>();
+        robotCodes = new ArrayList<>(); // hab
+        robotCodePort = new ArrayList<>();
+        List<DefCompetitors> readyCodes = this.defCompetitorsDao.getReadyCompetiors();
 
-       List<String> readyCodes = this.defCompetitorsDao.getReadyCompetiors();
-
-
-       // for (int i = 0 ; i < 10 ; i++) {
-
-        while(true){
-
-            // start olan kodlara 12 sinyalini gonder gonder
-            for (String code : readyCodes) {
-                this.udpClient.sendMessage("id: " + code + "  cmd: 12  stat: 00");
-            }
-
-
-            String message = this.udpServer.startUDPServer();
-
-
-            System.out.println("[Start], STM den alınan mesaj : " + message);
-
-            if (message.contains("id")) {
-                // Mesajı ":" ile parçala ve boşlukları temizle
-                String[] parts = message.split("\\s+");
-
-                // id, cmd ve stat alanlarını ayır
-                String idRobot = parts[0].split(":")[1].trim();
-                String cmd = parts[1].split(":")[1].trim();
-                String stat = parts[2].split(":")[1].trim();
-
-                System.out.println("start id: " + idRobot);
-                System.out.println("cmd: " + cmd);
-                System.out.println("stat: " + stat);
-
-                // cmd--> 12 start , stat 01 --> OK, id --00'dan farklı ve daha once codes listesinde yoksa ekle
-                if (!idRobot.equals("00") && cmd.equals("12") && stat.contains("01") && !codes.contains(idRobot)) {
-                    codes.add(idRobot);
-                }
-
-                if(codes.size() == robotCount)
-                    break;
-            }
-            // sinyal gondermek ve almak icin 2 saniye bekle
-            Thread.sleep(2000);
+        for (DefCompetitors code : readyCodes) {
+            log.info("start kod gonderecekler: " + code.getCode() + " port:" + code.getSPort());
+            this.udpClient.sendMessageWithPort("id: " + code.getCode() + "  cmd: 12  stat: 00" , Integer.valueOf(code.getSPort()) );
         }
 
-        for (String code : codes) {
-            System.out.println("code " + code);
+        while (true) {
+
+            List<Integer> port = new ArrayList<>();
+            port.add(6000);
+            port.add(6002);
+        //    port.add(6003);
+
+
+
+            port.parallelStream().forEach(s -> {
+
+                if( robotCodePort.contains(s)) {
+                    log.info("port already returned data start: " + s);
+                    return;
+                }
+
+                String message = this.udpServer.startServer(s);
+                if (message.contains("id")) {
+                    // Mesajı ":" ile parçala ve boşlukları temizle
+                    String[] parts = message.split("\\s+");
+
+                    // id, cmd ve stat alanlarını ayır
+                    String idRobot = parts[0].split(":")[1].trim();
+                    String cmd = parts[1].split(":")[1].trim();
+                    String stat = parts[2].split(":")[1].trim();
+
+                    log.info("start id: " + idRobot);
+                    log.info("cmd: " + cmd);
+                    log.info("stat: " + stat);
+
+                    // cmd--> 12 start , stat 01 --> OK, id --00'dan farklı ve daha once codes listesinde yoksa ekle
+                    if (!idRobot.equals("00") && cmd.equals("12") && stat.contains("01") && !robotCodes.contains(idRobot)) {
+                        robotCodes.add(idRobot);
+                        robotCodePort.add(s);
+                        readyCodes.remove(idRobot); //start olduğu için artık start komutu göndermeye gerek yok.
+                        log.info("**ROBOT START : " + idRobot);
+                    }
+                }
+
+            });
+
+            if(robotCodes.size() == robotCount){
+                break;
+            }
+
+        }
+
+        for (String code : robotCodes) {
+            log.info("code " + code);
 
             if (code != null) {
 
@@ -339,10 +359,10 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
                             logService.writeLog(logEntity);
 
-                            System.out.println(code + " koduna sahip yarışmacı için isStart güncellendi ve sayaç başladı.");
+                            log.info(code + " koduna sahip yarışmacı için isStart güncellendi ve sayaç başladı.");
 
                         } else {
-                            System.out.println(code + " koduna sahip yarışmacı ready komutunu göndermedi.");
+                            log.info(code + " koduna sahip yarışmacı ready komutunu göndermedi.");
 
                             logEntity.setDate(LocalDateTime.now().format(formatter));
                             logEntity.setMessage(defCompetitor.getName() + " start komutunu gönderdi ama daha önce ready komutunu göndermedi ! Kod :  " + code + "Yarışmacı Bilgileri : " + defCompetitor);
@@ -352,7 +372,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                             logService.writeLog(logEntity);
                         }
                     } else {
-                        System.out.println(code + " koduna sahip yarışmacı elenmiş durumda, sayaç başlatılmadı");
+                        log.info(code + " koduna sahip yarışmacı elenmiş durumda, sayaç başlatılmadı");
 
                         logEntity.setDate(LocalDateTime.now().format(formatter));
                         logEntity.setMessage(defCompetitor.getName() + " start komutu gönderdi ama elenmiş durumda, sayaç başlatılmadı.Kod :  " + code + "Yarışmacı Bilgileri : " + defCompetitor);
@@ -361,10 +381,9 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                         logService.writeLog(logEntity);
                     }
                 } else {
-                    System.out.println("start için " + code + " koduna sahip yarışmacı bulunamadı.");
+                    log.info("start için " + code + " koduna sahip yarışmacı bulunamadı.");
                 }
             }
-
         }
 
         // idler toplandıktan sonra start çalışsın
@@ -411,7 +430,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
 
             } else {
-                System.out.println("Id bilgisine göre yarışmacı bulunamadı.");
+                log.info("Id bilgisine göre yarışmacı bulunamadı.");
             }
 
         }
@@ -419,53 +438,64 @@ public class DefCompetitorsManager implements DefCompetitorsService {
     }
 
     public void listenForFinishSignal() {
-        while (true) {
 
-            String message = this.udpServer.startUDPServer();
+        robotCodePort = new ArrayList<>(); // haberlesmesi biten portları buraya ata
 
-            System.out.println("[Finish], STM den alınan mesaj :  " + message);
+       while (true) {
 
-            if (message.contains("id")) {
-                // Mesajı ":" ile parçala ve boşlukları temizle
-                String[] parts = message.split("\\s+");
+           if (idMap.isEmpty()) {
+               log.info("[Finish] yarısan robot kalmadı. Port dinleme bitti. ");
+               break;
+           }
 
-                // id, cmd ve stat alanlarını ayır
-                String idRobot = parts[0].split(":")[1].trim();
-                String cmd = parts[1].split(":")[1].trim();
-                String stat = parts[2].split(":")[1].trim();
+           List<Integer> port = new ArrayList<>();
+           port.add(6000);
+           port.add(6002);
+         //  port.add(6003);
 
-                System.out.println("finish id: " + idRobot);
-                System.out.println("cmd: " + cmd);
-                System.out.println("stat: " + stat);
+           port.parallelStream().forEach(s -> {
 
-                // cmd--> 13 ready , stat 01 --> OK, id --00'dan farklı ve daha once codes listesinde yoksa ekle
-                if (!idRobot.equals("00") && cmd.equals("13") && stat.contains("00") ) {
-                    finish(idRobot.lines().toList());
-                    this.udpClient.sendMessage("id: " + idRobot + "  cmd: 13  stat: 01"); // finish olduğuna dair ack biti gonder
-                }
+               if (robotCodePort.contains(s)) {
+                   log.info("port already returned data: " + s);
+                   return;
+               }
 
-            }
+               String message = this.udpServer.startServer(s);
 
-            if(idMap.isEmpty()){
-                System.out.println("[Finish] yarısan robot kalmadı. Port dinleme bitti. ");
-                break;
-            }
+               if (message.contains("id")) {
+                   // Mesajı ":" ile parçala ve boşlukları temizle
+                   String[] parts = message.split("\\s+");
 
-        }
+                   // id, cmd ve stat alanlarını ayır
+                   String idRobot = parts[0].split(":")[1].trim();
+                   String cmd = parts[1].split(":")[1].trim();
+                   String stat = parts[2].split(":")[1].trim();
+
+                   log.info("finish id: " + idRobot);
+                   log.info("cmd: " + cmd);
+                   log.info("stat: " + stat);
+
+                   // cmd--> 13 ready , stat 01 --> OK, id --00'dan farklı ve daha once codes listesinde yoksa ekle
+                   if (!idRobot.equals("00") && cmd.equals("13") && stat.contains("00")) {
+                       robotCodePort.add(s);
+                       this.udpClient.sendMessage("id: " + idRobot + "  cmd: 13  stat: 01"); // finish olduğuna dair ack biti gonder
+                       finish(idRobot);
+                   }
+
+               }
+           });
+       }
     }
-
 
 
     // gönderilen kod bilgisine göre eğer yarışmacı elenmemişse, hazır ve başlamışsa bunları false a çeker ve timerı durdurur
     @Override
-    public Result finish(List<String>  codes) {
+    public Result finish(String code) {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss:SSS");
+        String formattedDateTime = LocalDateTime.now().format(formatter);
 
-
-        for (String code : codes) {
-
-            DefCompetitors defCompetitor = this.defCompetitorsDao.findByCode(code);
+        DefCompetitors defCompetitor = this.defCompetitorsDao.findByCode(code);
 
             if (defCompetitor != null) {
 
@@ -473,15 +503,12 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
                     if (defCompetitor.isStart()) { // start true
 
-                        System.out.println("********** stop id from map :" + defCompetitor.getId());
+                        log.info("********** stop id from map :" + defCompetitor.getId());
 
                         CompetitorTimer timer = idMap.get(defCompetitor.getId());
-
-
                         idMap.remove(defCompetitor.getId());
 
                         // Tarih bilgisini belirli formatta ayarla
-                        String formattedDateTime = LocalDateTime.now().format(formatter);
 
 
                         defCompetitor.setStopTime(formattedDateTime);
@@ -491,7 +518,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                         defCompetitor.setFinish(true);
                         DefCompetitors stoppedCompetitor = this.defCompetitorsDao.save(defCompetitor);
 
-                        System.out.println("stoppedCompetitor : " + stoppedCompetitor);
+                        log.info("stoppedCompetitor : " + stoppedCompetitor);
 
                         logEntity.setDate(formattedDateTime);
                         logEntity.setMessage(stoppedCompetitor.getName() + " parkuru bitirdi.Sayaç durduruldu.Yarışmacı bilgileri : " + stoppedCompetitor);
@@ -500,9 +527,9 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                         logService.writeLog(logEntity);
 
 
-                        System.out.println(code + " koduna sahip yarışmacı için isStart güncellendi ve sayaç durduruldu.");
+                        log.info(code + " koduna sahip yarışmacı için isStart güncellendi ve sayaç durduruldu.");
                     } else {
-                        System.out.println(code + " koduna sahip yarışmacı  start komutunu göndermedi.");
+                        log.info(code + " koduna sahip yarışmacı  start komutunu göndermedi.");
 
                         logEntity.setDate(LocalDateTime.now().format(formatter));
                         logEntity.setMessage(defCompetitor.getName() + " daha önce start komutunu göndermedi.Kod :  " + code + "Yarışmacı Bilgileri : " + defCompetitor);
@@ -511,7 +538,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                         logService.writeLog(logEntity);
                     }
                 } else {
-                    System.out.println(code + " koduna sahip yarışmacı elenmiş durumda, sayacı yok.");
+                    log.info(code + " koduna sahip yarışmacı elenmiş durumda, sayacı yok.");
 
                     logEntity.setDate(LocalDateTime.now().format(formatter));
                     logEntity.setMessage(defCompetitor.getName() + " koduna sahip yarışmacı elenmiş durumda.Yarışmacı bilgileri : " + defCompetitor);
@@ -520,10 +547,8 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                     logService.writeLog(logEntity);
                 }
             } else {
-                System.out.println(code + " koduna sahip yarışmacı bulunamadı.");
+                log.info(code + " koduna sahip yarışmacı bulunamadı.");
             }
-        }
-
 
         return new SuccessResult("Sayaçlar durduruldu.");
 
@@ -569,7 +594,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
                     if (timer != null) {
                         String duration = timer.printElapsedTime();
-                        //System.out.println("update duration Id:" + id + " duration:" + duration);
+                        //log.info("update duration Id:" + id + " duration:" + duration);
 
                         if (duration.equals("05:00:00") || duration.compareTo("05:00:00") > 0) {
                             competitor.setEliminated(true);
@@ -579,7 +604,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
                             competitor.setDuration(duration);
                             DefCompetitors savedCompetitor = this.defCompetitorsDao.save(competitor);
-                            //System.out.println("updatedCompetitor:" + savedCompetitor);
+                            //log.info("updatedCompetitor:" + savedCompetitor);
 
                             logEntity.setDate(LocalDateTime.now().format(formatter));
                             logEntity.setMessage(savedCompetitor.getName() + " 5 dakika  boyunca parkuru tamamlayamadı.Yarışmacı elendi. Yarışmacı bilgileri :" + savedCompetitor);
@@ -594,14 +619,14 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                         } else {
                             competitor.setDuration(duration);
                             DefCompetitors savedCompetitor = this.defCompetitorsDao.save(competitor);
-                            //System.out.println("updatedCompetitor:" + savedCompetitor);
+                            //log.info("updatedCompetitor:" + savedCompetitor);
                         }
                     }
                 }
             } else {
                 // idSet'ten de kaldır
                 idSet.remove(id);
-                System.out.println("updateDurationById Id bilgisine göre yarışmacı bulunamadı.");
+                log.info("updateDurationById Id bilgisine göre yarışmacı bulunamadı.");
             }
         }
     }

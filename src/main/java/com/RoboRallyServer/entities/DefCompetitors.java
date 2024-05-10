@@ -58,5 +58,7 @@ public class DefCompetitors {
     @Column(name = "bIsdelete")
     private boolean isDelete;
 
+    @Column(name = "sPort")
+    private String sPort;
 
 }
