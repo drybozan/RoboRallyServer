@@ -189,12 +189,12 @@ public class DefCompetitorsManager implements DefCompetitorsService {
     @Override
     public Result ready() throws InterruptedException {
 
-        robotCodes = new ArrayList<>(); // mevcut aldıgım robot kodları burada haberlesirken
-        robotCodePort = new ArrayList<>(); // haberlesme yaptıgım portları burda tutuyorum
+        robotCodes = new ArrayList<>(); // mevcut aldıgım robot kodları burada topla birden fazla aynı robot id yi almamak icin
+        robotCodePort = new ArrayList<>(); // haberlesme yaptıgım portları burda tutuyorum, istediğim paketi aldıysam aynı porta tekrar data gondermemek icin
         List<Integer> port = new ArrayList<>(); // haberlesmem gereken portlar burda
         port.add(6000);
         port.add(6002);
-   //     port.add(6003);
+        //port.add(6001);
 
         while (true) {
 
@@ -242,7 +242,6 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                             if (!defCompetitor.isEliminated()) {
                                 defCompetitor.setReady(true);
                                 defCompetitor.setSPort(s.toString());
-                                defCompetitor.setSPort(s.toString());
                                 this.defCompetitorsDao.save(defCompetitor);
 
                                 logEntity.setDate(LocalDateTime.now().format(formatter));
@@ -282,21 +281,23 @@ public class DefCompetitorsManager implements DefCompetitorsService {
     @Override
     public Result start() throws InterruptedException {
 
-        robotCodes = new ArrayList<>(); // hab
-        robotCodePort = new ArrayList<>();
+        robotCodes = new ArrayList<>(); // mevcut aldıgım robot kodları burada topla birden fazla aynı robot id yi almamak icin
+        robotCodePort = new ArrayList<>(); // haberlesme yaptıgım portları burda tutuyorum, istediğim paketi aldıysam aynı porta tekrar data gondermemek icin
         List<DefCompetitors> readyCodes = this.defCompetitorsDao.getReadyCompetiors();
 
-        for (DefCompetitors code : readyCodes) {
-            log.info("start kod gonderecekler: " + code.getCode() + " port:" + code.getSPort());
-            this.udpClient.sendMessageWithPort("id: " + code.getCode() + "  cmd: 12  stat: 00" , Integer.valueOf(code.getSPort()) );
-        }
+
 
         while (true) {
+
+            for (DefCompetitors code : readyCodes) {
+                log.info("start kod gonderecekler: " + code.getCode() + " port:" + code.getSPort());
+                this.udpClient.sendMessageWithPort("id: " + code.getCode() + "  cmd: 12  stat: 00" , Integer.valueOf(code.getSPort()) );
+            }
 
             List<Integer> port = new ArrayList<>();
             port.add(6000);
             port.add(6002);
-        //    port.add(6003);
+           // port.add(6001);
 
 
 
@@ -439,7 +440,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
     public void listenForFinishSignal() {
 
-        robotCodePort = new ArrayList<>(); // haberlesmesi biten portları buraya ata
+        robotCodePort = new ArrayList<>(); // haberlesmesi biten portları buraya ata,tekrar veri almamak icin
 
        while (true) {
 
@@ -451,7 +452,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
            List<Integer> port = new ArrayList<>();
            port.add(6000);
            port.add(6002);
-         //  port.add(6003);
+          // port.add(6001);
 
            port.parallelStream().forEach(s -> {
 
@@ -460,7 +461,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                    return;
                }
 
-               String message = this.udpServer.startServer(s);
+               String message = this.udpServer.startServerForFinish(s);
 
                if (message.contains("id")) {
                    // Mesajı ":" ile parçala ve boşlukları temizle

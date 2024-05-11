@@ -14,11 +14,12 @@ import java.net.InetAddress;
 @Component
 public class UDPClient {
 
-    private final int[] clientPorts = {6000, 6002}; // Önceden tanımlanmış port numaraları
+    private final int[] clientPorts = { 6000,6002}; // Önceden tanımlanmış port numaraları
 
     public void sendMessage(String message) {
         //String[] ips = {"192.168.1.29", "192.168.1.26","192.168.1.23"};
-        String[] ips = {"192.168.1.29","192.168.1.26"};
+        //String[] ips = {"192.168.1.29", "192.168.1.26","192.168.1.27"};
+        String[] ips = {"192.168.1.29", "192.168.1.26"};
 
         try {
 
@@ -39,7 +40,8 @@ public class UDPClient {
 
     // ready i göonderirken port bilgisi ile birlikte gonder
     public void sendMessageWithPort(String message , Integer port) {
-        String[] ips = {"192.168.1.29","192.168.1.26"};
+        // String[] ips = {"192.168.1.29", "192.168.1.26","192.168.1.27"};
+        String[] ips = {"192.168.1.29", "192.168.1.26"};
 
         try {
             for (String ip : ips) {
