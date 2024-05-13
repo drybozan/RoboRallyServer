@@ -21,10 +21,15 @@ public class DefPorts {
     @Column(name = "id")
     private int id;
 
-    @Column(name = "port")
-    private int city;
-
+    @Column(name = "startPort")
+    private int startPort;
 
     @Column(name = "ip")
     private String ip;
+
+    @Column(name = "finishPort")
+    private int finishPort;
+
+    @Column(name = "isDelete")
+    private int isDelete;
 }

@@ -202,7 +202,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         port.add(6004);*/
 
         List<Integer> port = new ArrayList<>();
-        port = this.defPortsDao.getAllPorts(); // haberlesmem gereken portlar burda
+        port = this.defPortsDao.getAllStartPorts(); // haberlesmem gereken portlar burda
 
 
        while (true) {
@@ -314,7 +314,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
             port.add(6004);*/
 
             List<Integer> port = new ArrayList<>();
-            port = this.defPortsDao.getAllPorts(); // haberlesmem gereken portlar burda
+            port = this.defPortsDao.getAllStartPorts(); // haberlesmem gereken portlar burda
 
 
             port.parallelStream().forEach(s -> {
@@ -472,7 +472,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
            port.add(6004);*/
 
            List<Integer> port = new ArrayList<>();
-           port = this.defPortsDao.getAllPorts(); // haberlesmem gereken portlar burda
+           port = this.defPortsDao.getAllFinishPorts(); // haberlesmem gereken portlar burda
 
            port.parallelStream().forEach(s -> {
 

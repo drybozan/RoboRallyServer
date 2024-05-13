@@ -66,48 +66,6 @@ public class UDPServer {
         return null;
     }
 
-/*    public String startServer(int port) {
-
-            if (isPortAvailable(port)) {
-                // Port zaten kullanılmıyorsa, yeni bir DatagramSocket oluşturabiliriz
-                try (DatagramSocket socket = new DatagramSocket(port)) {
-                    // DatagramSocket başarıyla oluşturuldu, devam edebiliriz
-                    byte[] buffer = new byte[1024];
-                    for (int j = 0; j < 10; j++) {
-                        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                        socket.receive(packet);
-                        String received = new String(packet.getData(), 0, packet.getLength());
-                        log.info(port + " Received from port: " + received);
-                        if (received.contains("id")) {
-                            // Socket'i kapat
-                            return received;
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            } else {
-                // Port zaten kullanılıyor, bir sonraki porta geç
-                log.warn("Port " + port + " is already in use.");
-
-            }
-
-        // Belirtilen sayıda deneme yapıldı, ancak başarılı bir şekilde port açılamadı
-        return null;
-    }
-
-    private boolean isPortAvailable(int port) {
-        try (DatagramSocket ignored = new DatagramSocket(port)) {
-            // Eğer DatagramSocket başarıyla oluşturulduysa, port kullanılmıyor demektir
-            return true;
-        } catch (IOException e) {
-            // Port zaten kullanılıyor
-            return false;
-        }
-    }*/
-
-
-
 }
 
 

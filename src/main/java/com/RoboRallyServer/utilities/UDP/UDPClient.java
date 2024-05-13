@@ -24,7 +24,7 @@ public class UDPClient {
 
     public UDPClient(DefPortsDao defPortsDao) {
         this.defPortsDao = defPortsDao;
-        this.clientPorts = defPortsDao.getAllPorts();
+        this.clientPorts = defPortsDao.getAllStartPorts();
     }
 
    // private final int[] clientPorts = {6001,6002,6003,6004}; // Önceden tanımlanmış port numaraları

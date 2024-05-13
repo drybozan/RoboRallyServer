@@ -11,12 +11,15 @@ import java.util.List;
 @Repository
 public interface DefPortsDao extends JpaRepository<DefPorts,Integer> {
 
-    @Query(value = "SELECT port FROM RoboRallyDB.DefPorts ;", nativeQuery = true)
-    List<Integer> getAllPorts();
+    @Query(value = "SELECT startPort FROM RoboRallyDB.DefPorts where isDelete = 0 ;", nativeQuery = true)
+    List<Integer> getAllStartPorts();
 
-    @Query(value = "SELECT ip FROM RoboRallyDB.DefPorts ;", nativeQuery = true)
+    @Query(value = "SELECT ip FROM RoboRallyDB.DefPorts where isDelete = 0 ;", nativeQuery = true)
     List<String> getAllIps();
 
     @Query(value = "SELECT count(*) FROM RoboRallyDB.DefPorts ;", nativeQuery = true)
     int getRobotCount();
+
+    @Query(value = "SELECT finishPort FROM RoboRallyDB.DefPorts where isDelete = 0 ;", nativeQuery = true)
+    List<Integer> getAllFinishPorts();
 }
