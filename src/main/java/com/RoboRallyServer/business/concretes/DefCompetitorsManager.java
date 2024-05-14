@@ -356,7 +356,6 @@ public class DefCompetitorsManager implements DefCompetitorsService {
         }
 
         for (String code : robotCodes) {
-            //log.info("code " + code);
 
             if (code != null) {
 
@@ -617,7 +616,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                         String duration = timer.printElapsedTime();
                         //log.info("update duration Id:" + id + " duration:" + duration);
 
-                        if (duration.equals("05:00:00") || duration.compareTo("05:00:00") > 0) {
+                        if (duration.equals("10:00:00") || duration.compareTo("10:00:00") > 0) {
                             competitor.setEliminated(true);
                             competitor.setReady(false);
                             competitor.setStart(false);

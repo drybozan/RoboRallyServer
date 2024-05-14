@@ -17,7 +17,7 @@ public interface DefPortsDao extends JpaRepository<DefPorts,Integer> {
     @Query(value = "SELECT ip FROM RoboRallyDB.DefPorts where isDelete = 0 ;", nativeQuery = true)
     List<String> getAllIps();
 
-    @Query(value = "SELECT count(*) FROM RoboRallyDB.DefPorts ;", nativeQuery = true)
+    @Query(value = "SELECT count(*) FROM RoboRallyDB.DefPorts where isDelete = 0;", nativeQuery = true)
     int getRobotCount();
 
     @Query(value = "SELECT finishPort FROM RoboRallyDB.DefPorts where isDelete = 0 ;", nativeQuery = true)
