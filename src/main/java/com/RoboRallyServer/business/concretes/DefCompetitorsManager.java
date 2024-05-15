@@ -195,26 +195,24 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
         robotCodes = new ArrayList<>(); // mevcut aldıgım robot kodları burada topla birden fazla aynı robot id yi almamak icin
         robotCodePort = new ArrayList<>(); // haberlesme yaptıgım portları burda tutuyorum, istediğim paketi aldıysam aynı porta tekrar data gondermemek icin
-/*        List<Integer> port = new ArrayList<>(); // haberlesmem gereken portlar burda
-        port.add(6001);
-        port.add(6002);
-        port.add(6003);
-        port.add(6004);*/
+
 
         List<Integer> port = new ArrayList<>();
         port = this.defPortsDao.getAllStartPorts(); // haberlesmem gereken portlar burda
+
 
 
        while (true) {
 
             this.udpClient.sendMessage("id: 00  cmd: 11  stat: 00");
 
-
             port.parallelStream().forEach(s-> {
-               if( robotCodePort.contains(s)) {
+
+
+ /*               if( robotCodePort.contains(s)) {
                   // log.info("[READY] port already returned data: " + s);
                     return;
-                }
+                }*/
 
 
                 String fromPort1 = udpServer.startServer(s);
@@ -230,8 +228,8 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                     String cmd = parts[1].split(":")[1].trim();
                     String stat = parts[2].split(":")[1].trim();
 
-                    
-                    
+
+
                     log.info("id: " + idRobot);
                     log.info("cmd: " + cmd);
                     log.info("stat: " + stat);
@@ -277,7 +275,8 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                 }
 
             });
-            System.out.println("robotCodes.size() ==" + robotCodes.size() );
+            System.out.println("[READY] robotCodes.size() ==" + robotCodes.size() );
+           System.out.println("[READY] robotCount ==" + robotCount );
             if(robotCodes.size() == robotCount){
                 break;
             }
@@ -300,6 +299,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
 
 
+
         while (true) {
 
             for (DefCompetitors code : readyCodes) {
@@ -307,11 +307,7 @@ public class DefCompetitorsManager implements DefCompetitorsService {
                 this.udpClient.sendMessageWithPort("id: " + code.getCode() + "  cmd: 12  stat: 00" , Integer.valueOf(code.getSPort()) );
             }
 
-/*            List<Integer> port = new ArrayList<>();
-            port.add(6001);
-            port.add(6002);
-            port.add(6003);
-            port.add(6004);*/
+
 
             List<Integer> port = new ArrayList<>();
             port = this.defPortsDao.getAllStartPorts(); // haberlesmem gereken portlar burda
@@ -319,10 +315,10 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
             port.parallelStream().forEach(s -> {
 
-                if( robotCodePort.contains(s)) {
+/*                if( robotCodePort.contains(s)) {
                    // log.info("port already returned data start: " + s);
                     return;
-                }
+                }*/
 
                 String message = this.udpServer.startServer(s);
                 if (message != null && message.contains("id")) {
@@ -349,6 +345,8 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
             });
 
+            System.out.println("[START] robotCodes.size() ==" + robotCodes.size() );
+            System.out.println("[START] robotCount ==" + robotCount );
             if(robotCodes.size() == robotCount){
                 break;
             }
@@ -459,16 +457,6 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
        while (true) {
 
-           if (idMap.isEmpty()) {
-               log.info("[Finish] yarısan robot kalmadı. Port dinleme bitti. ");
-               break;
-           }
-
-/*           List<Integer> port = new ArrayList<>();
-           port.add(6001);
-           port.add(6002);
-           port.add(6003);
-           port.add(6004);*/
 
            List<Integer> port = new ArrayList<>();
            port = this.defPortsDao.getAllFinishPorts(); // haberlesmem gereken portlar burda
@@ -504,6 +492,12 @@ public class DefCompetitorsManager implements DefCompetitorsService {
 
                }
            });
+
+          // log.info("[Finish] idMap.isEmpty() : " + idMap.isEmpty());
+           if (idMap.isEmpty()) {
+               log.info("[Finish] yarısan robot kalmadı. Port dinleme bitti. ");
+               break;
+           }
        }
     }
 

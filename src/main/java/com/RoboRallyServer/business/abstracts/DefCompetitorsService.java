@@ -22,4 +22,6 @@ public interface DefCompetitorsService {
 
     Result finish(String  code);
 
+    void listenForFinishSignal();
+
 }

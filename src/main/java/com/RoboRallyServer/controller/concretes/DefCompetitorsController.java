@@ -85,5 +85,10 @@ public class DefCompetitorsController {
     }
 */
 
+    @GetMapping(value = "/listenFinish")
+    public void listenFinish() {
+
+        this.defCompetitorsService.listenForFinishSignal();
+    }
 
 }
